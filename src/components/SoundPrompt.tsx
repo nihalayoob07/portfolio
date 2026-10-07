@@ -62,7 +62,7 @@ export function SoundPrompt() {
           Sound on?
         </h2>
         <p className="relative mx-auto mt-5 max-w-md text-base leading-relaxed text-ink/75 md:text-lg">
-          An alarm that rings, a keyboard switch you can click and a demo mouse that clicks along. Nothing loud.
+          A few light sound effects make the demos more fun. Nothing loud.
         </p>
         <div className="relative mt-9 flex flex-col justify-center gap-3 sm:flex-row">
           <button
