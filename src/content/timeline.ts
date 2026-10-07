@@ -23,8 +23,8 @@ export const timeline: Milestone[] = [
   {
     when: "2024",
     title: "Photography award winner",
-    org: "Photography competition",
-    text: "Won an award for my photography.",
+    org: "St. Aloysius PU College",
+    text: "Won a photography award at St. Aloysius PU College.",
   },
   {
     when: "2023",
