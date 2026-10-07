@@ -28,7 +28,8 @@ export const site = {
     { label: "Email", href: "mailto:mnihalayoob@gmail.com", icon: "mail" },
   ] satisfies Social[],
   nav: [
-    { label: "About", href: "#about" },
+    // The start of the page: the hero, then the about text.
+    { label: "About", href: "#top" },
     { label: "Work", href: "#work" },
     { label: "Models", href: "#models" },
     { label: "Contact", href: "#contact" },
