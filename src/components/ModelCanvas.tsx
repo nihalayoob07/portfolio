@@ -20,8 +20,11 @@ export type ModelCanvasProps = {
 
 type Part = { key: string; geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 };
 
-function Model({ url, color, wireframe }: { url: string; color: string; wireframe: boolean }) {
+function Model({ url, color, wireframe, onReady }: { url: string; color: string; wireframe: boolean; onReady: (url: string) => void }) {
   const { scene } = useGLTF(url, false, true);
+
+  // Mounting means Suspense has resolved, so this model is on screen.
+  useEffect(() => onReady(url), [onReady, url]);
 
   // Re-render each part with our own filament material, keeping its world transform
   // (which carries the dequantisation scale from the meshopt export).
@@ -55,9 +58,10 @@ function Model({ url, color, wireframe }: { url: string; color: string; wirefram
   );
 }
 
-function LoadingBadge() {
-  const { active, progress } = useProgress();
-  if (!active) return null;
+// Shown only until the selected model is on screen, not while the others preload in the background.
+function LoadingBadge({ show }: { show: boolean }) {
+  const { progress } = useProgress();
+  if (!show) return null;
   return (
     <div className="pointer-events-none absolute inset-0 grid place-items-center">
       <span className="rounded-full border border-line bg-bg/80 px-4 py-2 font-mono text-xs tracking-widest text-ink/70 uppercase">
@@ -78,6 +82,7 @@ function Fit({ url, resetKey }: { url: string; resetKey: number }) {
 
 export default function ModelCanvas({ url, size, color, wireframe, zoom, running, resetKey, preload }: ModelCanvasProps) {
   const [spinning, setSpinning] = useState(true);
+  const [readyUrl, setReadyUrl] = useState<string | null>(null);
   const resume = useRef<number | undefined>(undefined);
   const span = Math.max(size[0], size[1]);
 
@@ -102,7 +107,7 @@ export default function ModelCanvas({ url, size, color, wireframe, zoom, running
 
         <Suspense fallback={null}>
           <Bounds key={url} fit clip margin={1.18} maxDuration={0.8}>
-            <Model url={url} color={color} wireframe={wireframe} />
+            <Model url={url} color={color} wireframe={wireframe} onReady={setReadyUrl} />
             <Fit url={url} resetKey={resetKey} />
           </Bounds>
           <ContactShadows
@@ -146,7 +151,7 @@ export default function ModelCanvas({ url, size, color, wireframe, zoom, running
           }}
         />
       </Canvas>
-      <LoadingBadge />
+      <LoadingBadge show={readyUrl !== url} />
     </>
   );
 }

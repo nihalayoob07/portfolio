@@ -7,7 +7,15 @@ import { models } from "@/content/models";
 import { gsap, useGSAP, MOTION } from "@/lib/gsap";
 
 // three.js only loads once the section is near the viewport.
-const ModelCanvas = dynamic(() => import("./ModelCanvas"), { ssr: false });
+const ModelCanvas = dynamic(() => import("./ModelCanvas"), { ssr: false, loading: () => <ViewerPlaceholder /> });
+
+function ViewerPlaceholder() {
+  return (
+    <div className="grid h-full place-items-center text-muted">
+      <Box className="size-8 animate-pulse" aria-hidden="true" />
+    </div>
+  );
+}
 
 const SWATCHES = [
   { name: "Jade white", hex: "#e8e5dd" },
@@ -104,9 +112,7 @@ export function Models() {
                 preload={others}
               />
             ) : (
-              <div className="grid h-full place-items-center text-muted">
-                <Box className="size-8 animate-pulse" aria-hidden="true" />
-              </div>
+              <ViewerPlaceholder />
             )}
 
             <div className="pointer-events-none absolute top-0 left-0 p-4 md:p-5">
