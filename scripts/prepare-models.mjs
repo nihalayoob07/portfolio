@@ -219,9 +219,10 @@ function layoutPlates(parts) {
 const matrix3x4 = (t) => new THREE.Matrix4().set(...t.slice(0, 4), ...t.slice(4, 8), ...t.slice(8, 12), 0, 0, 0, 1);
 
 // An MX-style keyboard switch, built from primitives. `at` is the plate line (where the top housing
-// meets the bottom housing), in the model's Z-up millimetres; returns one part per colour.
-function mxSwitch({ name = "switch", at, colors = {} }) {
-  const [x, y, z] = at;
+// meets the bottom housing), in the model's Z-up millimetres; `rotate` turns it about Z (degrees).
+// Returns one part per colour.
+function mxSwitch({ name = "switch", at, rotate = 0, colors = {} }) {
+  const [x, y, z] = [0, 0, at[2]];
   const housing = colors.housing ?? "#2a2a31";
   const top = colors.top ?? "#3a3a44";
   const stem = colors.stem ?? "#d8433b";
@@ -242,7 +243,9 @@ function mxSwitch({ name = "switch", at, colors = {} }) {
     const g = mergeGeometries(
       geoms.map((q) => q.toNonIndexed()),
       false,
-    );
+    )
+      .rotateZ(THREE.MathUtils.degToRad(rotate))
+      .translate(at[0], at[1], 0);
     return {
       name,
       plate: 1,
