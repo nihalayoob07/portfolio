@@ -1,6 +1,8 @@
 // Records the website reels for the Work section: real screens of each flow plus where the cursor goes.
-//   npm run capture:reels [printvault|printledger]   (PrintLedger needs `npm run dev` on port 3100)
+//   npm run capture:reels [printvault|printledger|posters]   (PrintLedger and posters need `npm run dev` on port 3100)
 // Frames land in public/work/reels/<reel>/, positions in src/content/reels/<reel>.json.
+// "posters" renders each 3D print's opening frame from the site itself, wide and portrait, into
+// public/models/posters/; the panels show these until the live 3D has drawn.
 // Print Vault is only read: the cart lives in this headless browser's localStorage and checkout is
 // captured empty (the reel types over it), so nothing reaches the store.
 import { spawn } from "node:child_process";
@@ -219,6 +221,37 @@ async function printledger(page) {
   rec.save();
 }
 
+async function posters(page) {
+  const dir = "public/models/posters";
+  fs.mkdirSync(dir, { recursive: true });
+  const { models } = { models: JSON.parse(fs.readFileSync("src/content/models.generated.json", "utf8")) };
+  for (const [kind, view, dpr] of [
+    ["wide", { width: 1440, height: 900 }, 1.5],
+    ["tall", { width: 430, height: 932 }, 2],
+  ]) {
+    await page.setViewport({ ...view, deviceScaleFactor: dpr });
+    await page.goto("http://localhost:3100/", { waitUntil: "networkidle2", timeout: 90000 });
+    // Answer the sound prompt, and hide everything that isn't the 3D stage itself.
+    await page.evaluate(() => document.querySelector("dialog")?.close());
+    await page.addStyleTag({
+      content: `header, ul.fixed, dialog, [data-intro], [data-dim], [data-label], [data-caption], [data-poster],
+        [data-showcase] button, nextjs-portal { visibility: hidden !important; } html { overflow: auto !important; }`,
+    });
+    for (const m of models) {
+      const id = `model-${m.slug}`;
+      await page.evaluate((id) => {
+        const a = document.getElementById(id);
+        window.scrollTo(0, a.getBoundingClientRect().top + scrollY);
+      }, id);
+      await page.waitForSelector(`#${id} [data-ready]`, { timeout: 60000 });
+      await sleep(1500); // settle: AO, the cat's banner, any easing
+      const png = await page.screenshot({ type: "png" });
+      await sharp(png).webp({ quality: 78 }).toFile(path.join(dir, `${m.slug}-${kind}.webp`));
+      console.log(`poster ${m.slug}-${kind}`);
+    }
+  }
+}
+
 const only = process.argv[2];
 const browser = await connect();
 try {
@@ -230,6 +263,7 @@ try {
   await page.setViewport({ ...VIEW, deviceScaleFactor: DPR });
   if (!only || only === "printvault") await printvault(page);
   if (!only || only === "printledger") await printledger(page);
+  if (!only || only === "posters") await posters(page);
 } finally {
   await browser.close();
 }

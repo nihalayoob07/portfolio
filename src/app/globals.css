@@ -292,19 +292,6 @@ html.lenis body {
   }
 }
 
-/* 3D print loader: the hotend sweeping along the layer being printed. */
-.print-nozzle {
-  position: absolute;
-  top: -30px;
-  left: 1.25rem;
-  animation: nozzle-sweep 0.9s ease-in-out infinite alternate;
-}
-@keyframes nozzle-sweep {
-  to {
-    left: calc(100% - 1.25rem - 24px);
-  }
-}
-
 /* Sound prompt: an equaliser that bounces, and the card rising in. */
 .sound-bar {
   transform-origin: bottom;
@@ -322,8 +309,7 @@ html.lenis body {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sound-bar,
-  .print-nozzle {
+  .sound-bar {
     animation: none;
   }
 }

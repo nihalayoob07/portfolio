@@ -36,11 +36,14 @@ npm run prepare:hero -- path/to/photo.jpg
 # Screens and cursor targets for the Print Vault and PrintLedger reels (needs Edge;
 # PrintLedger also needs `npm run dev` running)
 npm run capture:reels
+
+# Poster stills of each 3D print's opening frame (needs `npm run dev` running)
+npm run capture:reels posters
 ```
 
 `prepare:models` reads the list in `scripts/models.config.json`. It assembles each print from Bambu Studio's assembly data plus the hand-measured placements there, adds extras such as the clicker's keyboard switch and raised lettering, simplifies parts above the triangle budget with meshoptimizer, and writes `src/content/models.generated.json`.
 
-`capture:reels` records each step of the flow as a still plus the page position of everything the demo cursor clicks or types into, in `src/content/reels/`. Print Vault is only read: its cart stays in the headless browser and the checkout is captured empty, with the typing added by the reel.
+`capture:reels` records each step of the flow as a still plus the page position of everything the demo cursor clicks or types into, in `src/content/reels/`. `posters` renders each 3D print's first frame from the running site, wide and portrait, into `public/models/posters/`: the panels show these straight away and the live 3D fades in over them, after the 3D code and every model have been loaded in the background once the page is idle. Print Vault is only read: its cart stays in the headless browser and the checkout is captured empty, with the typing added by the reel.
 
 ## Develop
 

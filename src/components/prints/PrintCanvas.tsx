@@ -3,10 +3,14 @@
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, useGLTF, useProgress } from "@react-three/drei";
+import { Environment, Lightformer, useGLTF } from "@react-three/drei";
 import { EffectComposer, N8AO, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import type { ModelEntry } from "@/content/models";
+import { models, type ModelEntry } from "@/content/models";
+
+// As soon as this chunk loads (at idle, see PrintPreload), fetch and decode every print, so a
+// panel's model is already in memory when its canvas mounts.
+for (const m of models) useGLTF.preload(m.glb, false, true);
 
 const BG = "#0a0a0c";
 const { degToRad: rad, smoothstep } = THREE.MathUtils;
@@ -21,9 +25,8 @@ export type PrintCanvasProps = {
   running: boolean;
   // Frame the print left of centre, leaving the right of the screen to captions (desktop only).
   aside: boolean;
+  // Called once the print's first frame has been drawn (shaders compiled, lighting baked).
   onReady: () => void;
-  // Download progress of the model, 0–100.
-  onProgress: (p: number) => void;
 };
 
 // Camera and moving parts for each print, as a function of scroll progress.
@@ -138,7 +141,7 @@ function usePieces(url: string) {
   }, [scene]);
 }
 
-function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasProps, "running" | "onProgress">) {
+function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasProps, "running">) {
   const { pieces, box } = usePieces(model.glb);
   const lid = useRef<THREE.Group>(null);
   const pressed = useRef<THREE.Group>(null);
@@ -158,7 +161,24 @@ function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasP
   const radius = useMemo(() => box.getSize(new THREE.Vector3()).length() / 2, [box]);
   const look = useRef({ az: 0, el: 0, dist: 0, lid: 0, lift: 0, ready: false });
 
-  useEffect(() => onReady(), [onReady]);
+  // Compile every shader without blocking the page, draw one frame, then say we're ready; this can
+  // all happen before the panel is on screen (the canvas renders on demand until then).
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    let live = true;
+    gl.compileAsync(scene, camera)
+      .catch(() => {})
+      .then(() => {
+        if (!live) return;
+        invalidate();
+        requestAnimationFrame(() => requestAnimationFrame(() => live && onReady()));
+      });
+    return () => {
+      live = false;
+    };
+  }, [gl, scene, camera, invalidate, onReady]);
 
   useFrame((state, dt) => {
     const target = pose(progress.current ?? 0);
@@ -402,24 +422,17 @@ function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vecto
   );
 }
 
-function ReportProgress({ onProgress }: { onProgress: (p: number) => void }) {
-  const { progress } = useProgress();
-  useEffect(() => onProgress(progress), [progress, onProgress]);
-  return null;
-}
-
-export default function PrintCanvas({ model, progress, clickedAt, running, aside, onReady, onProgress }: PrintCanvasProps) {
+export default function PrintCanvas({ model, progress, clickedAt, running, aside, onReady }: PrintCanvasProps) {
   return (
     <Canvas
       shadows="percentage"
       dpr={[1, 1.75]}
-      frameloop={running ? "always" : "never"}
+      frameloop={running ? "always" : "demand"}
       camera={{ fov: 30, position: [0, 100, 400] }}
       gl={{ antialias: false, powerPreference: "high-performance" }}
     >
       <color attach="background" args={[BG]} />
       <fog attach="fog" args={[BG, 1000, 4000]} />
-      <ReportProgress onProgress={onProgress} />
       <Suspense fallback={null}>
         <Print model={model} progress={progress} clickedAt={clickedAt} aside={aside} onReady={onReady} />
       </Suspense>

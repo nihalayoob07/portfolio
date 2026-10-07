@@ -6,7 +6,6 @@ import { MousePointerClick } from "lucide-react";
 import { useGSAP } from "@/lib/gsap";
 import { keyClick } from "@/lib/sfx";
 import { SoundToggle } from "../SoundToggle";
-import { PrintLoader } from "./PrintLoader";
 import type { ModelEntry } from "@/content/models";
 import { Captions, useShowcase, type Caption, type CaptionPlace } from "../showcase/Showcase";
 import { caption, reelTimeline } from "../showcase/engine";
@@ -72,7 +71,6 @@ export function PrintStage({ model }: { model: ModelEntry }) {
   const clickedAt = useRef(-1e9);
   const [ready, setReady] = useState(false);
   const onReady = useCallback(() => setReady(true), []);
-  const [loaded, setLoaded] = useState(0);
   const { onScreen } = useShowcase();
   const clicker = model.slug === "cat-clicker";
   const stage = STAGES[model.slug] ?? { captions: [] };
@@ -92,13 +90,6 @@ export function PrintStage({ model }: { model: ModelEntry }) {
           },
         },
         0.2,
-      );
-      // While the panel title is up, the loader waits below it, smaller; then it takes the centre.
-      tl.fromTo(
-        el.querySelector("[data-loader]"),
-        { y: () => window.innerHeight * 0.32, scale: 0.55 },
-        { y: 0, scale: 1, duration: 0.5, ease: "power1.inOut" },
-        0.1,
       );
       const caps = el.querySelectorAll("[data-caption]");
       const span = (STORY - 0.4) / caps.length;
@@ -128,16 +119,12 @@ export function PrintStage({ model }: { model: ModelEntry }) {
           : undefined
       }
     >
-      <PrintCanvas
-        model={model}
-        progress={progress}
-        clickedAt={clickedAt}
-        running={onScreen}
-        aside={!!stage.aside}
-        onReady={onReady}
-        onProgress={setLoaded}
-      />
-      <PrintLoader model={model} progress={loaded} done={ready} />
+      <div
+        data-ready={ready || undefined}
+        className={`absolute inset-0 transition-opacity duration-500 ${ready ? "opacity-100" : "opacity-0"}`}
+      >
+        <PrintCanvas model={model} progress={progress} clickedAt={clickedAt} running={onScreen} aside={!!stage.aside} onReady={onReady} />
+      </div>
       {clicker && (
         <>
           <div ref={sfx} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
