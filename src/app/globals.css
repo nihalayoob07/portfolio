@@ -1,0 +1,221 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a0c;
+  --color-surface: #121218;
+  --color-raised: #18181f;
+  --color-ink: #ecebf0;
+  --color-muted: #8d8c99;
+  --color-faint: #55545e;
+  --color-line: rgb(255 255 255 / 0.09);
+  --color-accent: #4f7dff;
+  --color-accent-soft: #93acff;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@layer components {
+  .display {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent-soft);
+  }
+
+  /* Card with corner brackets, as in the reference's "What I do". */
+  .bracket {
+    position: relative;
+    border: 1px dashed rgb(255 255 255 / 0.14);
+  }
+  .bracket::before,
+  .bracket::after,
+  .bracket > .bracket-b::before,
+  .bracket > .bracket-b::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: var(--color-ink);
+    border-style: solid;
+    pointer-events: none;
+  }
+  .bracket::before {
+    top: -1px;
+    left: -1px;
+    border-width: 2px 0 0 2px;
+  }
+  .bracket::after {
+    top: -1px;
+    right: -1px;
+    border-width: 2px 2px 0 0;
+  }
+  .bracket > .bracket-b::before {
+    bottom: -1px;
+    left: -1px;
+    border-width: 0 0 2px 2px;
+  }
+  .bracket > .bracket-b::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* Link text that rolls up to a copy of itself on hover. */
+  .roll {
+    display: inline-flex;
+    flex-direction: column;
+    height: 1.2em;
+    line-height: 1.2em;
+    overflow: hidden;
+  }
+  .roll > span {
+    transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  a:hover > .roll > span,
+  a:focus-visible > .roll > span {
+    transform: translateY(-100%);
+  }
+}
+
+/* Soft accent glows pinned to the viewport edges. */
+.edge-glow {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 9999px;
+  z-index: 0;
+  background: radial-gradient(circle, rgb(79 125 255 / 0.45), rgb(79 125 255 / 0) 65%);
+}
+
+/* Hero intro, done in CSS so it plays before hydration. */
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes glow-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.intro-line {
+  display: block;
+  overflow: hidden;
+}
+.intro-line > span {
+  display: inline-block;
+  animation: rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.intro-fade {
+  animation: fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Role rotator: words stack in one grid cell and swap with a blur. */
+.roles {
+  display: grid;
+}
+.roles > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity 0.7s ease,
+    filter 0.7s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(35%);
+}
+.roles > .is-active {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+.roles > .is-leaving {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(-35%);
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .roles > * {
+    filter: none;
+    transform: none;
+  }
+}

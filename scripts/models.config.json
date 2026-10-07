@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "medbox",
+    "title": "Medicine box",
+    "source": "~/Downloads/MEDBOX_COMPLETE.3mf"
+  },
+  {
+    "slug": "z-ring",
+    "title": "Z-ring",
+    "source": "~/OneDrive/Documents/3djob/z ring/final.3mf"
+  },
+  {
+    "slug": "tissue-box",
+    "title": "Ribbed tissue box",
+    "source": "~/OneDrive/Documents/3djob/tissuebox/ribbedtissueboxfinal.3mf"
+  },
+  {
+    "slug": "cat-clicker",
+    "title": "Cat clicker",
+    "source": "~/Downloads/cat_clicker_noAMS_11.3mf"
+  }
+]
