@@ -30,11 +30,13 @@ export function moveTo(tl: gsap.core.Timeline, cursor: Element, x: number, y: nu
   tl.to(cursor, { x, y, duration, ease: "power2.inOut" }, at);
 }
 
-// Plays the demo mouse's click sound as the playhead passes `at`, only when scrolling forward.
+// Plays the demo mouse's click sound as the playhead passes `at`, only when scrolling forward
+// through the panel (not while the scrub catches up after jumping elsewhere).
 export function clickSound(tl: gsap.core.Timeline, at: number, down = true) {
   tl.call(
     () => {
-      if ((tl.scrollTrigger?.direction ?? 1) > 0) mouseClick(down);
+      const st = tl.scrollTrigger;
+      if (st?.isActive && st.direction > 0) mouseClick(down);
     },
     [],
     at,

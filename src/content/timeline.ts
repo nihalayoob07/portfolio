@@ -21,6 +21,12 @@ export const timeline: Milestone[] = [
     text: "Prepared GST invoices for a construction company, then wrote a Chrome extension that runs the whole workflow end to end.",
   },
   {
+    when: "2024",
+    title: "Photography award winner",
+    org: "Photography competition",
+    text: "Won an award for my photography.",
+  },
+  {
     when: "2023",
     title: "Graphic design winner",
     org: "Celestia 2023 · St. Agnes College",

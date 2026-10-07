@@ -46,7 +46,8 @@ export function DrillReel() {
       let ringing = false;
       tl.eventCallback("onUpdate", () => {
         const t = tl.time();
-        const now = t > RING[0] && t < RING[1];
+        // Only rings out loud while this panel is actually on screen.
+        const now = t > RING[0] && t < RING[1] && !!tl.scrollTrigger?.isActive;
         phone.dataset.ringing = String(now);
         if (now !== ringing) alarm((ringing = now));
       });

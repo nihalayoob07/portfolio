@@ -8,7 +8,7 @@ const ABOUT =
 
 const FACTS = [
   ["01", "B.E. Computer Science, SJEC"],
-  ["02", "Runs his own production server"],
+  ["02", "I run my own production server"],
   ["03", "National Spell Bee winner, 2020"],
 ];
 

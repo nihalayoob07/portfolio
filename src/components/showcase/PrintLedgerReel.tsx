@@ -9,7 +9,7 @@ import { INTRO, caption, click, fadeIn, moveTo, reelTimeline } from "./engine";
 const [W, H] = reel.viewport;
 const F = reel.frames;
 const T = reel.targets;
-const ORDER = ["empty", "weight", "time", "details", "logged", "ledgerView", "bills", "settings"] as const;
+const ORDER = ["empty", "weight", "time", "details", "logged", "ledgerView", "bills"] as const;
 
 const CAPTIONS: Caption[] = [
   ["Grams + hours", "Material and run time in, a price out"],
@@ -17,7 +17,6 @@ const CAPTIONS: Caption[] = [
   ["Log the sale", "Revenue and profit update straight away"],
   ["The ledger", "Search, filter and sort every print"],
   ["Bills", "Group finished prints into one bill"],
-  ["Settings", "Rates, currency and the app's look"],
 ];
 
 const centre = (k: keyof typeof T) => [T[k].x + T[k].w / 2, T[k].y + T[k].h / 2] as const;
@@ -60,15 +59,10 @@ export function PrintLedgerReel() {
       click(tl, c, 4.55);
       fadeIn(tl, frame("ledgerView"), 4.65);
 
-      caption(tl, caps[4], 5.7, 6.6);
+      caption(tl, caps[4], 5.7, 6.8);
       moveTo(tl, c, 1180, 820, 5.5, 0.3);
       fadeIn(tl, frame("bills"), 5.75, 0.2);
-
-      caption(tl, caps[5], 7.0, 8.0);
-      moveTo(tl, c, ...centre("settings"), 6.5, 0.4);
-      click(tl, c, 6.95);
-      fadeIn(tl, frame("settings"), 7.05);
-      tl.to({}, { duration: 0.4 }, 8.0);
+      tl.to({}, { duration: 0.3 }, 6.8);
     },
     { scope: root },
   );

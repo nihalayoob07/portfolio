@@ -9,10 +9,10 @@ import { PrintVaultReel } from "./showcase/PrintVaultReel";
 
 // Each reel and how many screens of scrolling it plays over.
 const REELS: Record<ReelId, { Reel: ComponentType; screens: number }> = {
-  printvault: { Reel: PrintVaultReel, screens: 8 },
-  drill: { Reel: DrillReel, screens: 7 },
+  printvault: { Reel: PrintVaultReel, screens: 5 },
+  drill: { Reel: DrillReel, screens: 5 },
   deck: { Reel: DeckReel, screens: 6 },
-  printledger: { Reel: PrintLedgerReel, screens: 6 },
+  printledger: { Reel: PrintLedgerReel, screens: 5 },
 };
 
 const featured = projects.filter((p) => p.reel);

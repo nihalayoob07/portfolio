@@ -1,98 +1,84 @@
 {
- "viewport": [
-  1440,
-  900
- ],
- "frames": {
-  "empty": {
-   "src": "/work/reels/printledger/empty.webp",
-   "height": 900
+  "viewport": [1440, 900],
+  "frames": {
+    "empty": {
+      "src": "/work/reels/printledger/empty.webp",
+      "height": 900
+    },
+    "weight": {
+      "src": "/work/reels/printledger/weight.webp",
+      "height": 900
+    },
+    "time": {
+      "src": "/work/reels/printledger/time.webp",
+      "height": 900
+    },
+    "details": {
+      "src": "/work/reels/printledger/details.webp",
+      "height": 900
+    },
+    "logged": {
+      "src": "/work/reels/printledger/logged.webp",
+      "height": 900
+    },
+    "ledgerView": {
+      "src": "/work/reels/printledger/ledgerView.webp",
+      "height": 900
+    },
+    "bills": {
+      "src": "/work/reels/printledger/bills.webp",
+      "height": 900
+    }
   },
-  "weight": {
-   "src": "/work/reels/printledger/weight.webp",
-   "height": 900
-  },
-  "time": {
-   "src": "/work/reels/printledger/time.webp",
-   "height": 900
-  },
-  "details": {
-   "src": "/work/reels/printledger/details.webp",
-   "height": 900
-  },
-  "logged": {
-   "src": "/work/reels/printledger/logged.webp",
-   "height": 900
-  },
-  "ledgerView": {
-   "src": "/work/reels/printledger/ledgerView.webp",
-   "height": 900
-  },
-  "bills": {
-   "src": "/work/reels/printledger/bills.webp",
-   "height": 900
-  },
-  "settings": {
-   "src": "/work/reels/printledger/settings.webp",
-   "height": 900
+  "targets": {
+    "weight": {
+      "frame": "empty",
+      "x": 180,
+      "y": 331,
+      "w": 311,
+      "h": 57
+    },
+    "time": {
+      "frame": "empty",
+      "x": 537,
+      "y": 331,
+      "w": 312,
+      "h": 57
+    },
+    "product": {
+      "frame": "empty",
+      "x": 180,
+      "y": 475,
+      "w": 339,
+      "h": 47
+    },
+    "customer": {
+      "frame": "empty",
+      "x": 537,
+      "y": 475,
+      "w": 339,
+      "h": 47
+    },
+    "log": {
+      "frame": "details",
+      "x": 179,
+      "y": 854,
+      "w": 698,
+      "h": 50
+    },
+    "ledger": {
+      "frame": "logged",
+      "x": 947,
+      "y": 525,
+      "w": 120,
+      "h": 20
+    },
+    "bills": {
+      "frame": "ledgerView",
+      "x": 1225,
+      "y": 966,
+      "w": 36,
+      "h": 36
+    }
   }
- },
- "targets": {
-  "weight": {
-   "frame": "empty",
-   "x": 180,
-   "y": 331,
-   "w": 311,
-   "h": 57
-  },
-  "time": {
-   "frame": "empty",
-   "x": 537,
-   "y": 331,
-   "w": 312,
-   "h": 57
-  },
-  "product": {
-   "frame": "empty",
-   "x": 180,
-   "y": 475,
-   "w": 339,
-   "h": 47
-  },
-  "customer": {
-   "frame": "empty",
-   "x": 537,
-   "y": 475,
-   "w": 339,
-   "h": 47
-  },
-  "log": {
-   "frame": "details",
-   "x": 179,
-   "y": 854,
-   "w": 698,
-   "h": 50
-  },
-  "ledger": {
-   "frame": "logged",
-   "x": 947,
-   "y": 525,
-   "w": 120,
-   "h": 20
-  },
-  "bills": {
-   "frame": "ledgerView",
-   "x": 1225,
-   "y": 966,
-   "w": 36,
-   "h": 36
-  },
-  "settings": {
-   "frame": "ledgerView",
-   "x": 1242,
-   "y": 39,
-   "w": 44,
-   "h": 44
-  }
- }
 }

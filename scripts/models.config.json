@@ -23,10 +23,19 @@
       "geometry_2": "#80FFFF"
     },
     "hinge": {
-      "parts": ["geometry_1", "handle_bail"],
+      "parts": ["geometry_1", "handle_bail", "latch_insert"],
       "point": [0, 78, 81.02],
       "axis": [1, 0, 0]
-    }
+    },
+    "extras": [
+      {
+        "kind": "stl",
+        "name": "latch_insert",
+        "file": "~/Downloads/latch_insert_1.stl",
+        "transform": [0, 0, -1, 9.8, 0, 1, 0, -83.565, 1, 0, 0, 83.345],
+        "color": "#FFD1BB"
+      }
+    ]
   },
   {
     "slug": "z-ring",

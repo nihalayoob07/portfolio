@@ -300,6 +300,17 @@ function raisedText({ name = "text", text, on, size = 14, depth = 1.6, embed = 0
   };
 }
 
+// A part from a separate binary STL, placed with an exact 3x4 transform (row-major, mm).
+function stlPart({ name, file, transform: placement, color }) {
+  const buf = fs.readFileSync(file.replace(/^~(?=[/\\])/, os.homedir()));
+  const count = buf.readUInt32LE(80);
+  if (buf.length !== 84 + count * 50) throw new Error(`${file}: only binary STL is supported`);
+  const positions = new Float32Array(count * 9);
+  for (let i = 0; i < count; i++) for (let k = 0; k < 9; k++) positions[i * 9 + k] = buf.readFloatLE(84 + i * 50 + 12 + k * 4);
+  transform(positions, matrix3x4(placement));
+  return { name, plate: 1, color, positions, indices: Uint32Array.from({ length: count * 3 }, (_, i) => i) };
+}
+
 // Puts a part from its print position to a hand-placed one: rotate about its own centre, then move that centre.
 function place(positions, { rotate = [0, 0, 0], center }) {
   const c = bounds(positions).getCenter(new THREE.Vector3());
@@ -364,6 +375,7 @@ async function convert(entry) {
   for (const extra of entry.extras || []) {
     if (extra.kind === "mx-switch") parts.push(...mxSwitch(extra));
     if (extra.kind === "text") parts.push(raisedText(extra, parts));
+    if (extra.kind === "stl") parts.push(stlPart(extra));
   }
   if (!assembled) layoutPlates(parts);
 

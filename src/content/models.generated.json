@@ -5,20 +5,21 @@
     "glb": "/models/medbox.glb",
     "thumb": "/models/medbox.webp",
     "assembled": true,
-    "parts": 9,
+    "parts": 10,
     "plates": 5,
-    "sourceTriangles": 23212,
-    "displayTriangles": 23212,
+    "sourceTriangles": 23624,
+    "displayTriangles": 23624,
     "size": [
       162.4,
       169,
       112.5
     ],
-    "bytes": 157928,
+    "bytes": 162316,
     "hinge": {
       "parts": [
         "geometry_1",
-        "handle_bail"
+        "handle_bail",
+        "latch_insert"
       ],
       "point": [
         0,

@@ -215,13 +215,6 @@ async function printledger(page) {
     await page.keyboard.press("Escape");
     await sleep(800);
   }
-  if (await tag(page, "settings", "Settings")) {
-    await rec.target("settings", "ledgerView", '[data-reel="settings"]');
-    await page.click('[data-reel="settings"]');
-    await sleep(1200);
-    await page.mouse.move(2, 2);
-    await rec.frame("settings");
-  }
   await page.evaluate(() => localStorage.clear());
   rec.save();
 }

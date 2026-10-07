@@ -8,7 +8,8 @@ import { gsap, ScrollTrigger, MOTION } from "@/lib/gsap";
 export function SmoothScroll() {
   useEffect(() => {
     if (!window.matchMedia(MOTION).matches) return;
-    const lenis = new Lenis({ anchors: { offset: -64 }, autoRaf: false });
+    // Anchor links jump rather than glide, so the menu doesn't play every reel on the way.
+    const lenis = new Lenis({ anchors: { offset: -64, immediate: true }, autoRaf: false });
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
