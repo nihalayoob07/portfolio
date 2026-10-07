@@ -1,42 +1,44 @@
-import type { Project } from "@/content/projects";
+import type { Preview } from "@/content/projects";
 
 // CSS-drawn covers for projects that have no screenshot to show.
-export function ProjectPoster({ kind }: { kind: NonNullable<Project["poster"]> }) {
+export function ProjectPoster({ kind }: { kind: Extract<Preview, { kind: "poster" }>["poster"] }) {
   if (kind === "server") {
-    const lines: [string, string?][] = [
-      ["$ docker compose up -d --build"],
-      ["  ✔ printvault", "healthy"],
-      ["$ cloudflared tunnel run"],
-      ["  tunnel connected, no open ports", "ok"],
-      ["$ ./backup.sh"],
-      ["  VACUUM INTO snapshot", "rotated"],
-      ["$ sudo reboot"],
-      ["  printvault restarted on boot", "ok"],
+    // Request path from the internet to the database, as deployed.
+    const hops = [
+      { name: "Cloudflare edge", note: "TLS, caching" },
+      { name: "Tunnel", note: "outbound only" },
+      { name: "Caddy", note: "HTTPS, HSTS, headers" },
+      { name: "Next.js", note: "Docker, non-root" },
+      { name: "SQLite", note: "rotating snapshots" },
     ];
     return (
-      <div className="flex h-full w-full flex-col bg-[#0d0f14] font-mono text-[11px] leading-relaxed sm:text-xs">
-        <div className="flex items-center gap-1.5 border-b border-white/5 px-4 py-2.5">
-          <i className="size-2.5 rounded-full bg-white/15" />
-          <i className="size-2.5 rounded-full bg-white/15" />
-          <i className="size-2.5 rounded-full bg-white/15" />
-          <span className="ml-3 text-white/35">fedora-server</span>
-        </div>
-        <div className="flex-1 space-y-0.5 px-4 py-3">
-          {lines.map(([text, tag], i) => (
-            <p key={i} className={text.startsWith("$") ? "text-ink/90" : "text-ink/45"}>
-              {text} {tag && <span className="text-accent-soft">[{tag}]</span>}
-            </p>
+      <div className="flex h-full w-full flex-col justify-center gap-3 bg-[#0d0f14] px-4 sm:gap-5 sm:px-8">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-3">
+          {hops.map((h, i) => (
+            <div key={h.name} className="flex items-center gap-1.5">
+              <div className="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1.5 sm:py-2">
+                <p className="text-xs font-medium text-ink/90 sm:text-sm">{h.name}</p>
+                <p className="hidden font-mono text-[10px] tracking-wider text-ink/45 uppercase sm:block">{h.note}</p>
+              </div>
+              {i < hops.length - 1 && (
+                <span className="text-accent" aria-hidden="true">
+                  →
+                </span>
+              )}
+            </div>
           ))}
-          <p className="text-ink/90">
-            $ <span className="inline-block h-3.5 w-2 translate-y-0.5 animate-pulse bg-accent" />
-          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 font-mono text-[10px] tracking-widest text-ink/50 uppercase sm:text-[11px]">
+          <span className="rounded border border-accent/40 px-2 py-1 text-accent-soft">Fedora Server</span>
+          <span className="rounded border border-white/10 px-2 py-1">SELinux enforcing</span>
+          <span className="rounded border border-white/10 px-2 py-1">0 open ports</span>
         </div>
       </div>
     );
   }
 
   if (kind === "flow") {
-    const steps = ["WhatsApp order", "Livekeeping invoice", "e-way bill + e-invoice", "PDF back to group"];
+    const steps = ["WhatsApp order", "GST invoice", "e-way bill + e-invoice", "PDF back to the group"];
     return (
       <div className="flex h-full w-full flex-col justify-center gap-5 bg-[#0e1016] px-6 sm:px-10">
         <div className="flex flex-wrap items-center gap-2">
@@ -51,22 +53,6 @@ export function ProjectPoster({ kind }: { kind: NonNullable<Project["poster"]> }
           <span className="rounded border border-accent/40 px-2 py-1 text-accent-soft">dry run on</span>
           <span className="rounded border border-white/10 px-2 py-1">total verified</span>
           <span className="rounded border border-white/10 px-2 py-1">no duplicates</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (kind === "nova") {
-    return (
-      <div className="flex h-full w-full flex-col items-start justify-center gap-5 bg-[#10111a] px-6 sm:px-10">
-        <span className="display text-6xl tracking-[0.2em] text-ink sm:text-7xl">Nova</span>
-        <div>
-          <div className="flex gap-1.5">
-            {Array.from({ length: 10 }, (_, i) => (
-              <i key={i} className={`size-3 rounded-full sm:size-3.5 ${i < 8 ? "bg-accent" : "bg-white/10"}`} />
-            ))}
-          </div>
-          <p className="mt-2 font-mono text-[11px] tracking-widest text-ink/50 uppercase">Activities · Learn · Connect</p>
         </div>
       </div>
     );

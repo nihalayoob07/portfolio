@@ -20,6 +20,8 @@
 
 html {
   background: var(--color-bg);
+  /* Keeps the layout still when an overlay hides the scrollbar. */
+  scrollbar-gutter: stable;
 }
 
 body {

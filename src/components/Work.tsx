@@ -1,13 +1,32 @@
 "use client";
 
-import { useRef } from "react";
-import Image from "next/image";
+import { useRef, useState } from "react";
 import { ArrowUpRight, Lock } from "lucide-react";
 import { projects, type Project } from "@/content/projects";
 import { gsap, useGSAP, DESKTOP_MOTION } from "@/lib/gsap";
 import { ProjectPoster } from "./ProjectPoster";
+import { DeckDemo } from "./previews/DeckDemo";
+import { PhonePreview } from "./previews/PhonePreview";
+import { PreviewDialog } from "./previews/PreviewDialog";
+import { AppPreview, PagePreview } from "./previews/SitePreviews";
 
-function ProjectCard({ project, index }: { project: Project; index: number }) {
+function ProjectMedia({ project, onExpand }: { project: Project; onExpand: () => void }) {
+  const p = project.preview;
+  switch (p.kind) {
+    case "page":
+      return <PagePreview preview={p} title={project.title} onExpand={onExpand} />;
+    case "app":
+      return <AppPreview preview={p} title={project.title} onExpand={onExpand} />;
+    case "phone":
+      return <PhonePreview screens={p.screens} title={project.title} />;
+    case "deck":
+      return <DeckDemo />;
+    case "poster":
+      return <ProjectPoster kind={p.poster} />;
+  }
+}
+
+function ProjectCard({ project, index, onExpand }: { project: Project; index: number; onExpand: (p: Project) => void }) {
   return (
     <article className="flex w-full shrink-0 flex-col border-t border-line px-5 py-10 md:px-10 lg:h-full lg:w-[min(40rem,42vw)] lg:border-t-0 lg:border-l lg:py-6">
       <div className="flex items-start justify-between gap-4">
@@ -21,20 +40,13 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       <p className="mt-5 text-sm font-medium">Tools and features</p>
       <p className="mt-1 text-sm text-muted">{project.stack.join(", ")}</p>
 
-      <div className="relative mt-5 aspect-[16/9] w-full overflow-hidden rounded-lg border border-line lg:max-h-[34vh]">
-        {project.image ? (
-          <Image
-            src={project.image.src}
-            alt={project.image.alt}
-            width={project.image.width}
-            height={project.image.height}
-            loading="eager"
-            sizes="(min-width: 1024px) 40vw, 100vw"
-            className="h-full w-full object-cover object-top"
-          />
-        ) : (
-          project.poster && <ProjectPoster kind={project.poster} />
-        )}
+      {/* Fills the card's spare height on desktop; phones get a taller box for the portrait screens. */}
+      <div
+        className={`relative mt-5 w-full overflow-hidden rounded-lg border border-line lg:aspect-auto lg:min-h-52 lg:flex-1 ${
+          project.preview.kind === "phone" ? "aspect-[4/5] sm:aspect-[16/10]" : "aspect-[16/10]"
+        }`}
+      >
+        <ProjectMedia project={project} onExpand={() => onExpand(project)} />
       </div>
 
       <p className="mt-5 leading-relaxed text-ink/85">{project.summary}</p>
@@ -47,7 +59,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
         ))}
       </ul>
 
-      <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-6 text-sm">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-6 text-sm">
         {project.status && (
           <span className="flex items-center gap-2 font-mono text-[11px] tracking-widest text-ink/60 uppercase">
             <span className="size-1.5 rounded-full bg-accent shadow-[0_0_10px_rgb(79_125_255)]" aria-hidden="true" />
@@ -80,6 +92,7 @@ export function Work() {
   const root = useRef<HTMLElement>(null);
   const pin = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState<Project | null>(null);
 
   useGSAP(
     () => {
@@ -121,7 +134,7 @@ export function Work() {
         </h2>
         <div ref={track} className="flex flex-col border-y border-line lg:min-h-0 lg:flex-1 lg:flex-row lg:border-b-0 lg:pl-20">
           {projects.map((p, i) => (
-            <ProjectCard key={p.slug} project={p} index={i} />
+            <ProjectCard key={p.slug} project={p} index={i} onExpand={setExpanded} />
           ))}
           <div className="flex w-full shrink-0 flex-col justify-center gap-4 border-t border-line px-5 py-16 md:px-10 lg:w-[min(30rem,32vw)] lg:border-t-0 lg:border-l">
             <p className="text-3xl font-medium tracking-tight">Want to see more?</p>
@@ -137,6 +150,7 @@ export function Work() {
           </div>
         </div>
       </div>
+      <PreviewDialog project={expanded} onClose={() => setExpanded(null)} />
     </section>
   );
 }

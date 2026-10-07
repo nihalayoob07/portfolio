@@ -1,5 +1,20 @@
 export type ProjectLink = { label: string; href: string };
 
+export type PhoneScreen = { src: string; label: string };
+
+// What fills each card's preview area.
+export type Preview =
+  // A full-page capture of a live site: pans on hover, scrolls freely in the expanded view.
+  | { kind: "page"; src: string; width: number; height: number; url: string }
+  // A web app that runs for real in the expanded view; the card shows a capture of it.
+  | { kind: "app"; src: string; poster: { src: string; width: number; height: number }; url: string }
+  // Screens in a phone frame you can tap through.
+  | { kind: "phone"; screens: PhoneScreen[] }
+  // Deck's notch, driven by its real UI states.
+  | { kind: "deck" }
+  // A CSS-drawn cover for work with nothing to screenshot.
+  | { kind: "poster"; poster: "server" | "flow" | "keyboard" };
+
 export type Project = {
   slug: string;
   title: string;
@@ -10,9 +25,7 @@ export type Project = {
   highlights: string[];
   links: ProjectLink[];
   privateRepo?: boolean;
-  image?: { src: string; alt: string; width: number; height: number };
-  // Drawn in CSS when there's no screenshot to show.
-  poster?: "server" | "flow" | "nova" | "keyboard";
+  preview: Preview;
 };
 
 export const projects: Project[] = [
@@ -29,21 +42,7 @@ export const projects: Project[] = [
     ],
     links: [{ label: "theprintvault.in", href: "https://theprintvault.in" }],
     privateRepo: true,
-    image: { src: "/work/printvault.webp", alt: "ThePrint.Vault home page", width: 1600, height: 1000 },
-  },
-  {
-    slug: "home-server",
-    title: "Home server",
-    category: "Self-hosted infrastructure",
-    status: "In production",
-    stack: ["Fedora Server", "Docker Compose", "Cloudflare Tunnel", "Caddy", "SELinux"],
-    summary: "An old PC turned into the Fedora server that runs ThePrint.Vault in production.",
-    highlights: [
-      "Multi-stage Docker build with a non-root user, health check and memory cap; survives reboots",
-      "Cloudflare Tunnel gets around carrier-grade NAT with no open router ports; SQLite backups with VACUUM INTO and snapshot rotation",
-    ],
-    links: [],
-    poster: "server",
+    preview: { kind: "page", src: "/work/printvault-page.webp", width: 1200, height: 7214, url: "theprintvault.in" },
   },
   {
     slug: "deck",
@@ -58,7 +57,7 @@ export const projects: Project[] = [
     ],
     links: [],
     privateRepo: true,
-    image: { src: "/work/deck.webp", alt: "Deck sending a file from the notch to a phone", width: 1600, height: 900 },
+    preview: { kind: "deck" },
   },
   {
     slug: "drill",
@@ -73,22 +72,38 @@ export const projects: Project[] = [
     ],
     links: [],
     privateRepo: true,
-    image: { src: "/work/drill.webp", alt: "Drill feature graphic: the alarm that roasts you out of bed", width: 1024, height: 500 },
+    preview: {
+      kind: "phone",
+      screens: [
+        { src: "/work/drill/1-alarm.webp", label: "Alarm" },
+        { src: "/work/drill/2-briefing.webp", label: "Morning briefing" },
+        { src: "/work/drill/3-workout.webp", label: "Workout" },
+        { src: "/work/drill/4-moves.webp", label: "Exercise library" },
+        { src: "/work/drill/5-exercise.webp", label: "Exercise demo" },
+        { src: "/work/drill/6-plan.webp", label: "12-week plan" },
+        { src: "/work/drill/7-progress.webp", label: "Progress" },
+      ],
+    },
   },
   {
-    slug: "invoicer",
-    title: "Redstone Invoicer",
-    category: "Chrome extension",
-    status: "In daily use",
-    stack: ["Chrome MV3", "JavaScript", "Node.js tests"],
-    summary: "Automates a company's billing: WhatsApp order in, GST e-invoice and e-way bill out, PDF posted back to the group.",
+    slug: "printledger",
+    title: "PrintLedger",
+    category: "Web app · 3D print pricing",
+    status: "Open source",
+    stack: ["TypeScript", "React", "Vite", "Single-file build"],
+    summary:
+      "A pricing calculator and sales ledger for 3D-printing shops. Enter grams and hours and get a quote built from your own costs. One HTML file, no account, no server.",
     highlights: [
-      "Reads order lines from WhatsApp Web, fills and issues the invoice in Livekeeping, and sends the PDF back",
-      "Dry-run by default, grand-total check before issuing, duplicate protection and fuzzy matching for misspelt names",
+      "Prices any job from filament, printer wattage and run time, labour, packaging and margin, in each shop's own currency and rates",
+      "Ledger with paid and printed tracking, CSV export, customer bills as images, and optional sync through the shop's own Firebase",
     ],
-    links: [],
-    privateRepo: true,
-    poster: "flow",
+    links: [{ label: "Code", href: "https://github.com/nihalayoob07/printledgerv2" }],
+    preview: {
+      kind: "app",
+      src: "/demos/printledger.html",
+      poster: { src: "/work/printledger.webp", width: 1600, height: 1000 },
+      url: "PrintLedger · live demo",
+    },
   },
   {
     slug: "nova",
@@ -104,21 +119,23 @@ export const projects: Project[] = [
       { label: "Live demo", href: "https://nova-hackathon-eta.vercel.app" },
       { label: "Code", href: "https://github.com/cursednight774-glitch/NOVA-Hackathon" },
     ],
-    poster: "nova",
+    preview: { kind: "phone", screens: [{ src: "/work/nova.webp", label: "Today's activities" }] },
   },
   {
-    slug: "printledger",
-    title: "PrintLedger",
-    category: "Web app",
+    slug: "invoicer",
+    title: "Invoice Automation",
+    category: "Chrome extension",
     status: "In daily use",
-    stack: ["TypeScript", "Vite", "Single-file build", "localStorage"],
-    summary: "The pricing calculator and sales ledger used to quote every ThePrint.Vault order. One HTML file, no account, no server.",
+    stack: ["Chrome MV3", "JavaScript", "Node.js tests"],
+    summary:
+      "Automates a trading company's GST billing: an order line posted in WhatsApp becomes an e-invoice and e-way bill, with the PDF sent back.",
     highlights: [
-      "Prices a job from filament, wattage and run time, labour, packaging and margin, using the shop's own figures",
-      "Sales ledger with paid and printed tracking, CSV export, and bills exported as PNGs for customers",
+      "Reads order lines from WhatsApp Web, fills and issues the invoice in the accounting software, and posts the PDF back to the group",
+      "Dry-run by default, grand-total check before issuing, duplicate protection and fuzzy matching for misspelt names",
     ],
-    links: [{ label: "Code", href: "https://github.com/nihalayoob07/printledgerv2" }],
-    image: { src: "/work/printledger.webp", alt: "PrintLedger's pricing console", width: 1600, height: 1000 },
+    links: [],
+    privateRepo: true,
+    preview: { kind: "poster", poster: "flow" },
   },
   {
     slug: "evofox",
@@ -131,6 +148,21 @@ export const projects: Project[] = [
       "Live per-key colour control, built from scratch",
     ],
     links: [],
-    poster: "keyboard",
+    preview: { kind: "poster", poster: "keyboard" },
+  },
+  {
+    slug: "infrastructure",
+    title: "Self-hosted infrastructure",
+    category: "DevOps · Linux",
+    status: "In production",
+    stack: ["Fedora Server", "Docker Compose", "Cloudflare Tunnel", "Caddy", "SELinux"],
+    summary: "The production environment behind ThePrint.Vault: a self-managed Fedora server built to run unattended.",
+    highlights: [
+      "Containerised Next.js service with a multi-stage build, non-root user, health checks and memory limits, restarted automatically by Docker Compose",
+      "Ingress through a Cloudflare Tunnel with no open ports behind carrier-grade NAT; Caddy adds automatic HTTPS, HSTS and security headers",
+      "Secrets injected at runtime, rotating SQLite snapshots via VACUUM INTO, and one-command deploys that preserve all order data",
+    ],
+    links: [],
+    preview: { kind: "poster", poster: "server" },
   },
 ];
