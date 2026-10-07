@@ -22,7 +22,7 @@ export function Showcase({
   summary,
   links = [],
   screens,
-  ahead = "100%",
+  eager = false,
   still,
   children,
 }: {
@@ -35,8 +35,8 @@ export function Showcase({
   summary: string;
   links?: Link[];
   screens: number;
-  // How far beyond the viewport the reel mounts (a CSS length, as a share of the viewport height).
-  ahead?: string;
+  // Mount the reel with the page instead of a screen ahead (it must be cheap until it's needed).
+  eager?: boolean;
   // Shown from the start, under the reel (e.g. a poster frame), even before the reel mounts.
   still?: ReactNode;
   children: ReactNode;
@@ -47,9 +47,8 @@ export function Showcase({
 
   useEffect(() => {
     const el = article.current!;
-    // Mount the reel `ahead` of the viewport and drop it once well past, so only nearby panels hold
-    // images or WebGL.
-    const nearObs = new IntersectionObserver(([e]) => setNear(e.isIntersecting), { rootMargin: `${ahead} 0px` });
+    // Mount the reel a screen ahead and drop it once well past, so only nearby panels hold images.
+    const nearObs = new IntersectionObserver(([e]) => setNear(e.isIntersecting), { rootMargin: "100% 0px" });
     const seenObs = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting));
     nearObs.observe(el);
     seenObs.observe(el);
@@ -57,7 +56,7 @@ export function Showcase({
       nearObs.disconnect();
       seenObs.disconnect();
     };
-  }, [ahead]);
+  }, []);
 
   const num = `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
 
@@ -72,7 +71,7 @@ export function Showcase({
     >
       <div className="fixed inset-0 overflow-hidden bg-bg" inert={!onScreen}>
         {still}
-        <ShowcaseContext value={{ onScreen }}>{near && children}</ShowcaseContext>
+        <ShowcaseContext value={{ onScreen }}>{(eager || near) && children}</ShowcaseContext>
 
         <div data-dim className="pointer-events-none absolute inset-0 bg-bg/75 backdrop-blur-lg" aria-hidden="true" />
 

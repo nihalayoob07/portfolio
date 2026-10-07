@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { MousePointerClick } from "lucide-react";
 import { useGSAP } from "@/lib/gsap";
 import { keyClick } from "@/lib/sfx";
 import { SoundToggle } from "../SoundToggle";
+import { warm } from "./warm";
 import type { ModelEntry } from "@/content/models";
 import { Captions, useShowcase, type Caption, type CaptionPlace } from "../showcase/Showcase";
 import { caption, reelTimeline } from "../showcase/engine";
@@ -64,14 +65,21 @@ function spawnSfx(layer: HTMLElement) {
   window.setTimeout(() => s.remove(), 7000);
 }
 
-export function PrintStage({ model }: { model: ModelEntry }) {
+// `order` is the print's place in the warm-up queue (its panel order).
+export function PrintStage({ model, order }: { model: ModelEntry; order: number }) {
   const root = useRef<HTMLDivElement>(null);
   const sfx = useRef<HTMLDivElement>(null);
   const progress = useRef(0);
   const clickedAt = useRef(-1e9);
   const [ready, setReady] = useState(false);
-  const onReady = useCallback(() => setReady(true), []);
+  const onReady = useCallback(() => {
+    setReady(true);
+    warm.done(order);
+  }, [order]);
   const { onScreen } = useShowcase();
+  // Live once its turn in the warm-up comes, or straight away if someone lands on it first.
+  const allowed = useSyncExternalStore(warm.subscribe, warm.allowed, () => 0);
+  const live = allowed > order || onScreen;
   const clicker = model.slug === "cat-clicker";
   const stage = STAGES[model.slug] ?? { captions: [] };
 
@@ -123,7 +131,9 @@ export function PrintStage({ model }: { model: ModelEntry }) {
         data-ready={ready || undefined}
         className={`absolute inset-0 transition-opacity duration-500 ${ready ? "opacity-100" : "opacity-0"}`}
       >
-        <PrintCanvas model={model} progress={progress} clickedAt={clickedAt} running={onScreen} aside={!!stage.aside} onReady={onReady} />
+        {live && (
+          <PrintCanvas model={model} progress={progress} clickedAt={clickedAt} running={onScreen} aside={!!stage.aside} onReady={onReady} />
+        )}
       </div>
       {clicker && (
         <>

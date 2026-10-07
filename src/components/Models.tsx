@@ -21,7 +21,6 @@ function Poster({ slug }: { slug: string }) {
       <img
         src={`/models/posters/${slug}-wide.webp`}
         alt=""
-        fetchPriority="low"
         decoding="async"
         draggable={false}
         className="absolute inset-0 h-full w-full object-cover"
@@ -53,10 +52,10 @@ export function Models() {
           category={`3D print · ${m.parts} parts · ${m.size.map(Math.round).join(" × ")} mm`}
           summary={m.blurb}
           screens={screens}
-          ahead="250%"
+          eager
           still={<Poster slug={m.slug} />}
         >
-          <PrintStage model={m} />
+          <PrintStage model={m} order={i} />
         </Showcase>
       ))}
     </section>
