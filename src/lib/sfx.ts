@@ -55,8 +55,8 @@ if (typeof window !== "undefined") {
     if (ctx?.state !== "running") unlockedAt = performance.now();
     void audio().resume();
   };
-  window.addEventListener("pointerdown", unlock, { capture: true });
-  window.addEventListener("keydown", unlock, { capture: true });
+  // iOS only lets audio start on a tap's end or a click, not on pointerdown, so listen for all of them.
+  for (const type of ["pointerdown", "touchend", "click", "keydown"]) window.addEventListener(type, unlock, { capture: true });
 
   const INTERACTIVE = "a, button, [role=button], input, select, summary";
   const target = (e: Event) => {
@@ -167,6 +167,20 @@ function tick(t: number, freq: number, level: number, length: number) {
 }
 
 // A mechanical key: the press, then a lighter click as it springs back.
+let mouseAt = 0;
+// A light mouse click for the demo cursor (scroll-driven, so it only plays once audio is unlocked).
+// `down` is the press; the release is fainter.
+export function mouseClick(down = true) {
+  const now = performance.now();
+  if (!live() || now - mouseAt < 60) return;
+  mouseAt = now;
+  const t = ctx!.currentTime + 0.003;
+  if (down) {
+    tick(t, 2800, 0.16, 0.01);
+    tick(t + 0.07, 3600, 0.07, 0.008);
+  } else tick(t, 3600, 0.08, 0.008);
+}
+
 export function keyClick() {
   play(() => {
     const t = ctx!.currentTime + 0.005;

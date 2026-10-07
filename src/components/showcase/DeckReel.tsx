@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FileText, Folder } from "lucide-react";
 import { useGSAP } from "@/lib/gsap";
 import { Captions, type Caption, Cursor, Screen } from "./Showcase";
-import { INTRO, caption, click, fadeIn, moveTo, reelTimeline } from "./engine";
+import { INTRO, caption, click, clickSound, fadeIn, moveTo, reelTimeline } from "./engine";
 
 // A 1440 × 900 desktop with Deck's notch on top. The notch states are real captures of
 // Deck's renderer (850 × 314, transparent), centred on the top edge.
@@ -72,6 +72,7 @@ export function DeckReel() {
       tl.to(idle, { opacity: 0, duration: 0.1 }, 2.45);
       // Drop: the photo goes into the notch and Deck confirms.
       tl.to(ghost, { x: 688, y: 0, scale: 0.3, autoAlpha: 0, duration: 0.15 }, 2.8);
+      clickSound(tl, 2.8, false); // letting go of the mouse button
       fadeIn(tl, frame("drop"), 2.82, 0.08);
       tl.to(frame("dragOver"), { opacity: 0, duration: 0.08 }, 2.9);
       fadeIn(tl, frame("sent"), 2.95);

@@ -1,6 +1,7 @@
 "use client";
 
 import { gsap } from "@/lib/gsap";
+import { mouseClick } from "@/lib/sfx";
 
 // Timeline units the shared intro takes before a reel's own story starts.
 export const INTRO = 0.8;
@@ -29,10 +30,23 @@ export function moveTo(tl: gsap.core.Timeline, cursor: Element, x: number, y: nu
   tl.to(cursor, { x, y, duration, ease: "power2.inOut" }, at);
 }
 
-// A click: the arrow dips and a ring spreads from its tip. `set` + `to` so scrubbing back undoes it.
+// Plays the demo mouse's click sound as the playhead passes `at`, only when scrolling forward.
+export function clickSound(tl: gsap.core.Timeline, at: number, down = true) {
+  tl.call(
+    () => {
+      if ((tl.scrollTrigger?.direction ?? 1) > 0) mouseClick(down);
+    },
+    [],
+    at,
+  );
+}
+
+// A click: the arrow dips, a ring spreads from its tip and the mouse clicks. `set` + `to` so
+// scrubbing back undoes it.
 export function click(tl: gsap.core.Timeline, cursor: Element, at: number) {
   const ring = cursor.querySelector("[data-ring]");
   const arrow = cursor.querySelector("[data-arrow]");
+  clickSound(tl, at);
   tl.set(ring, { scale: 0.2, opacity: 0.8 }, at)
     .to(ring, { scale: 1.6, opacity: 0, duration: 0.2, ease: "power1.out" }, at)
     .to(arrow, { scale: 0.86, duration: 0.05 }, at)
