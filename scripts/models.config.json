@@ -21,6 +21,11 @@
     },
     "colors": {
       "geometry_2": "#80FFFF"
+    },
+    "hinge": {
+      "parts": ["geometry_1", "handle_bail"],
+      "point": [0, 78, 81.02],
+      "axis": [1, 0, 0]
     }
   },
   {
@@ -43,7 +48,17 @@
       "top.stl": {
         "center": [0, 0, 74.5]
       }
-    }
+    },
+    "extras": [
+      {
+        "kind": "text",
+        "name": "name_text",
+        "text": "YOUR NAME",
+        "on": "tissue_box_BOTTOM_v2_3.stl",
+        "size": 15,
+        "at": 0.48
+      }
+    ]
   },
   {
     "slug": "cat-clicker",

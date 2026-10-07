@@ -1,0 +1,121 @@
+{
+ "viewport": [
+  1440,
+  900
+ ],
+ "frames": {
+  "home": {
+   "src": "/work/reels/printvault/home.webp",
+   "height": 2700
+  },
+  "product": {
+   "src": "/work/reels/printvault/product.webp",
+   "height": 900
+  },
+  "added": {
+   "src": "/work/reels/printvault/added.webp",
+   "height": 900
+  },
+  "cart": {
+   "src": "/work/reels/printvault/cart.webp",
+   "height": 900
+  },
+  "checkout": {
+   "src": "/work/reels/printvault/checkout.webp",
+   "height": 1500
+  }
+ },
+ "targets": {
+  "product": {
+   "frame": "home",
+   "x": 368,
+   "y": 1542,
+   "w": 320,
+   "h": 488
+  },
+  "add": {
+   "frame": "product",
+   "x": 796,
+   "y": 483,
+   "w": 416,
+   "h": 48
+  },
+  "cartIcon": {
+   "frame": "added",
+   "x": 1360,
+   "y": 44,
+   "w": 40,
+   "h": 40
+  },
+  "checkout": {
+   "frame": "cart",
+   "x": 1048,
+   "y": 442,
+   "w": 352,
+   "h": 48
+  },
+  "customer_name": {
+   "frame": "checkout",
+   "x": 40,
+   "y": 316,
+   "w": 704,
+   "h": 48
+  },
+  "email": {
+   "frame": "checkout",
+   "x": 40,
+   "y": 413,
+   "w": 704,
+   "h": 48
+  },
+  "phone": {
+   "frame": "checkout",
+   "x": 40,
+   "y": 539,
+   "w": 704,
+   "h": 48
+  },
+  "line1": {
+   "frame": "checkout",
+   "x": 40,
+   "y": 665,
+   "w": 704,
+   "h": 48
+  },
+  "line2": {
+   "frame": "checkout",
+   "x": 40,
+   "y": 762,
+   "w": 704,
+   "h": 48
+  },
+  "city": {
+   "frame": "checkout",
+   "x": 40,
+   "y": 888,
+   "w": 342,
+   "h": 48
+  },
+  "pincode": {
+   "frame": "checkout",
+   "x": 402,
+   "y": 888,
+   "w": 342,
+   "h": 48
+  },
+  "state": {
+   "frame": "checkout",
+   "x": 40,
+   "y": 985,
+   "w": 704,
+   "h": 48
+  },
+  "pay": {
+   "frame": "checkout",
+   "x": 40,
+   "y": 1293,
+   "w": 161,
+   "h": 48
+  }
+ }
+}

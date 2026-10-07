@@ -23,6 +23,7 @@ import { Document, NodeIO } from "@gltf-transform/core";
 import { EXTMeshoptCompression, KHRMeshQuantization } from "@gltf-transform/extensions";
 import { meshopt } from "@gltf-transform/functions";
 import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
+import opentype from "opentype.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = path.join(ROOT, "public", "models");
@@ -256,6 +257,49 @@ function mxSwitch({ name = "switch", at, rotate = 0, colors = {} }) {
   });
 }
 
+// Raised lettering on a part's front (-Y) face, the way a personalised print comes out.
+// Centred on the part in X, at `at` of its height; the letters sink `embed` mm into the surface.
+const TEXT_FONT = path.join(ROOT, "scripts", "fonts", "BarlowSemiCondensed-Bold.ttf");
+function raisedText({ name = "text", text, on, size = 14, depth = 1.6, embed = 0.4, at = 0.5, color }, parts) {
+  const host = parts.find((p) => p.name === on);
+  if (!host) throw new Error(`text: no part named "${on}"`);
+  const shapePath = new THREE.ShapePath();
+  for (const c of opentype.loadSync(TEXT_FONT).getPath(text, 0, 0, size).commands) {
+    // opentype is y-down; flip to y-up.
+    if (c.type === "M") shapePath.moveTo(c.x, -c.y);
+    else if (c.type === "L") shapePath.lineTo(c.x, -c.y);
+    else if (c.type === "Q") shapePath.quadraticCurveTo(c.x1, -c.y1, c.x, -c.y);
+    else if (c.type === "C") shapePath.bezierCurveTo(c.x1, -c.y1, c.x2, -c.y2, c.x, -c.y);
+  }
+  // TrueType outlines wind the other way from what toShapes expects by default.
+  const geom = new THREE.ExtrudeGeometry(shapePath.toShapes(true), {
+    depth: depth + embed,
+    curveSegments: 6,
+    bevelEnabled: true,
+    bevelThickness: 0.2,
+    bevelSize: 0.15,
+    bevelSegments: 2,
+  });
+  geom.computeBoundingBox();
+  const tb = geom.boundingBox;
+  geom.translate(-(tb.min.x + tb.max.x) / 2, -(tb.min.y + tb.max.y) / 2, -tb.min.z);
+  // Text's up -> +Z, its extrusion -> -Y (out of the front face).
+  geom.rotateX(Math.PI / 2);
+  const hb = bounds(host.positions);
+  const half = (tb.max.x - tb.min.x) / 2;
+  let face = Infinity;
+  for (let i = 0; i < host.positions.length; i += 3)
+    if (Math.abs(host.positions[i] - (hb.min.x + hb.max.x) / 2) < half) face = Math.min(face, host.positions[i + 1]);
+  geom.translate((hb.min.x + hb.max.x) / 2, face + embed, hb.min.z + at * (hb.max.z - hb.min.z));
+  return {
+    name,
+    plate: host.plate,
+    color: color ?? host.color,
+    positions: new Float32Array(geom.attributes.position.array),
+    indices: Uint32Array.from({ length: geom.attributes.position.count }, (_, i) => i),
+  };
+}
+
 // Puts a part from its print position to a hand-placed one: rotate about its own centre, then move that centre.
 function place(positions, { rotate = [0, 0, 0], center }) {
   const c = bounds(positions).getCenter(new THREE.Vector3());
@@ -319,6 +363,7 @@ async function convert(entry) {
   }
   for (const extra of entry.extras || []) {
     if (extra.kind === "mx-switch") parts.push(...mxSwitch(extra));
+    if (extra.kind === "text") parts.push(raisedText(extra, parts));
   }
   if (!assembled) layoutPlates(parts);
 
@@ -398,6 +443,12 @@ async function convert(entry) {
       .webp({ quality: 82 })
       .toFile(path.join(OUT_DIR, `${entry.slug}.webp`));
 
+  // A hinge for the viewer to swing parts about, converted to its Y-up, centred frame.
+  const hinge = entry.hinge && {
+    parts: entry.hinge.parts,
+    point: [entry.hinge.point[0] - centre.x, entry.hinge.point[2] - all.min.z, -(entry.hinge.point[1] - centre.y)],
+    axis: [entry.hinge.axis[0], entry.hinge.axis[2], -entry.hinge.axis[1]],
+  };
   const size = all.getSize(new THREE.Vector3());
   const round = (n) => Math.round(n * 10) / 10;
   return {
@@ -413,6 +464,7 @@ async function convert(entry) {
     // Z-up millimetres: width × depth × height of what the viewer shows.
     size: [round(size.x), round(size.y), round(size.z)],
     bytes: glb.byteLength,
+    hinge: hinge ?? null,
   };
 }
 

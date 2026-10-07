@@ -14,7 +14,23 @@
       169,
       112.5
     ],
-    "bytes": 157928
+    "bytes": 157928,
+    "hinge": {
+      "parts": [
+        "geometry_1",
+        "handle_bail"
+      ],
+      "point": [
+        0,
+        81.02,
+        -80.5
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ]
+    }
   },
   {
     "slug": "z-ring",
@@ -31,7 +47,8 @@
       74.4,
       9.2
     ],
-    "bytes": 572956
+    "bytes": 572956,
+    "hinge": null
   },
   {
     "slug": "tissue-box",
@@ -39,16 +56,17 @@
     "glb": "/models/tissue-box.glb",
     "thumb": "/models/tissue-box.webp",
     "assembled": true,
-    "parts": 2,
+    "parts": 3,
     "plates": 2,
-    "sourceTriangles": 37132,
-    "displayTriangles": 37132,
+    "sourceTriangles": 48572,
+    "displayTriangles": 48572,
     "size": [
       161.1,
-      161.1,
+      163.1,
       76
     ],
-    "bytes": 235136
+    "bytes": 326764,
+    "hinge": null
   },
   {
     "slug": "cat-clicker",
@@ -65,6 +83,7 @@
       45,
       45.7
     ],
-    "bytes": 1014912
+    "bytes": 1014912,
+    "hinge": null
   }
 ]

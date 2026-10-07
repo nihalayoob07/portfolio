@@ -9,16 +9,19 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "prepare:models": "node scripts/prepare-models.mjs",
-    "prepare:hero": "node scripts/prepare-hero.mjs"
+    "prepare:hero": "node scripts/prepare-hero.mjs",
+    "capture:reels": "node scripts/capture-reels.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
+    "@react-three/postprocessing": "^3.1.3",
     "gsap": "^3.15.0",
     "lenis": "^1.3.26",
     "lucide-react": "^1.52.0",
     "next": "16.4.0",
+    "postprocessing": "^6.39.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "simple-icons": "^16.34.0",
@@ -37,8 +40,10 @@
     "eslint-config-next": "16.4.0",
     "fflate": "^0.8.3",
     "meshoptimizer": "^1.3.0",
+    "opentype.js": "^1.3.4",
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "puppeteer-core": "^24.43.1",
     "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "^5"

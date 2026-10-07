@@ -1,19 +1,7 @@
 export type ProjectLink = { label: string; href: string };
 
-export type PhoneScreen = { src: string; label: string };
-
-// What fills each card's preview area.
-export type Preview =
-  // A full-page capture of a live site: pans on hover, scrolls freely in the expanded view.
-  | { kind: "page"; src: string; width: number; height: number; url: string }
-  // A web app that runs for real in the expanded view; the card shows a capture of it.
-  | { kind: "app"; src: string; poster: { src: string; width: number; height: number }; url: string }
-  // Screens in a phone frame you can tap through.
-  | { kind: "phone"; screens: PhoneScreen[] }
-  // Deck's notch, driven by its real UI states.
-  | { kind: "deck" }
-  // A CSS-drawn cover for work with nothing to screenshot.
-  | { kind: "poster"; poster: "server" | "flow" | "keyboard" };
+// Featured projects play a full-screen, scroll-driven reel; the rest are listed after them.
+export type ReelId = "printvault" | "drill" | "deck" | "printledger";
 
 export type Project = {
   slug: string;
@@ -25,7 +13,7 @@ export type Project = {
   highlights: string[];
   links: ProjectLink[];
   privateRepo?: boolean;
-  preview: Preview;
+  reel?: ReelId;
 };
 
 export const projects: Project[] = [
@@ -42,22 +30,7 @@ export const projects: Project[] = [
     ],
     links: [{ label: "theprintvault.in", href: "https://theprintvault.in" }],
     privateRepo: true,
-    preview: { kind: "page", src: "/work/printvault-page.webp", width: 1200, height: 7214, url: "theprintvault.in" },
-  },
-  {
-    slug: "deck",
-    title: "Deck",
-    category: "Windows desktop app",
-    status: "Shipped",
-    stack: ["Electron", "Node.js", "JavaScript", "KDE Connect", "NSIS"],
-    summary: "A notch at the top of every screen with notes, to-dos and drag-and-drop file transfer to your phone.",
-    highlights: [
-      "Notches follow monitors as they're plugged in or removed, with one shared panel across screens",
-      "Drop files, folders, links or text on the notch and they land on your phone over Wi-Fi, even when it's locked",
-    ],
-    links: [],
-    privateRepo: true,
-    preview: { kind: "deck" },
+    reel: "printvault",
   },
   {
     slug: "drill",
@@ -72,18 +45,22 @@ export const projects: Project[] = [
     ],
     links: [],
     privateRepo: true,
-    preview: {
-      kind: "phone",
-      screens: [
-        { src: "/work/drill/1-alarm.webp", label: "Alarm" },
-        { src: "/work/drill/2-briefing.webp", label: "Morning briefing" },
-        { src: "/work/drill/3-workout.webp", label: "Workout" },
-        { src: "/work/drill/4-moves.webp", label: "Exercise library" },
-        { src: "/work/drill/5-exercise.webp", label: "Exercise demo" },
-        { src: "/work/drill/6-plan.webp", label: "12-week plan" },
-        { src: "/work/drill/7-progress.webp", label: "Progress" },
-      ],
-    },
+    reel: "drill",
+  },
+  {
+    slug: "deck",
+    title: "Deck",
+    category: "Windows desktop app",
+    status: "Shipped",
+    stack: ["Electron", "Node.js", "JavaScript", "KDE Connect", "NSIS"],
+    summary: "A notch at the top of every screen with notes, to-dos and drag-and-drop file transfer to your phone.",
+    highlights: [
+      "Notches follow monitors as they're plugged in or removed, with one shared panel across screens",
+      "Drop files, folders, links or text on the notch and they land on your phone over Wi-Fi, even when it's locked",
+    ],
+    links: [],
+    privateRepo: true,
+    reel: "deck",
   },
   {
     slug: "printledger",
@@ -98,12 +75,7 @@ export const projects: Project[] = [
       "Ledger with paid and printed tracking, CSV export, customer bills as images, and optional sync through the shop's own Firebase",
     ],
     links: [{ label: "Code", href: "https://github.com/nihalayoob07/printledgerv2" }],
-    preview: {
-      kind: "app",
-      src: "/demos/printledger.html",
-      poster: { src: "/work/printledger.webp", width: 1600, height: 1000 },
-      url: "PrintLedger · live demo",
-    },
+    reel: "printledger",
   },
   {
     slug: "nova",
@@ -119,7 +91,6 @@ export const projects: Project[] = [
       { label: "Live demo", href: "https://nova-hackathon-eta.vercel.app" },
       { label: "Code", href: "https://github.com/cursednight774-glitch/NOVA-Hackathon" },
     ],
-    preview: { kind: "phone", screens: [{ src: "/work/nova.webp", label: "Today's activities" }] },
   },
   {
     slug: "invoicer",
@@ -135,7 +106,6 @@ export const projects: Project[] = [
     ],
     links: [],
     privateRepo: true,
-    preview: { kind: "poster", poster: "flow" },
   },
   {
     slug: "evofox",
@@ -148,7 +118,6 @@ export const projects: Project[] = [
       "Live per-key colour control, built from scratch",
     ],
     links: [],
-    preview: { kind: "poster", poster: "keyboard" },
   },
   {
     slug: "infrastructure",
@@ -163,6 +132,5 @@ export const projects: Project[] = [
       "Secrets injected at runtime, rotating SQLite snapshots via VACUUM INTO, and one-command deploys that preserve all order data",
     ],
     links: [],
-    preview: { kind: "poster", poster: "server" },
   },
 ];

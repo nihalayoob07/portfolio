@@ -221,3 +221,73 @@ html.lenis body {
     transform: none;
   }
 }
+
+/* Drill reel: the phone buzzes and rings while the alarm is going. */
+@keyframes drill-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  20% {
+    transform: translate(-4px, 1px) rotate(-1.4deg);
+  }
+  40% {
+    transform: translate(4px, -1px) rotate(1.4deg);
+  }
+  60% {
+    transform: translate(-3px, 0) rotate(-1deg);
+  }
+  80% {
+    transform: translate(3px, 1px) rotate(1deg);
+  }
+}
+@keyframes drill-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+.drill-ring {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .drill-phone[data-ringing="true"] {
+    animation: drill-shake 0.3s linear infinite;
+  }
+  .drill-phone[data-ringing="true"] .drill-ring {
+    animation: drill-ring 1.2s ease-out infinite;
+  }
+}
+
+/* Cat clicker: comic "CLICK!" pops, one per click, scattered over the stage. */
+.sfx {
+  position: absolute;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 7px #0a0a0c;
+  paint-order: stroke fill;
+  text-shadow: 4px 5px 0 #0a0a0c;
+  transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--s));
+  animation:
+    sfx-pop 0.38s cubic-bezier(0.2, 1.7, 0.4, 1) both,
+    sfx-fade 0.8s ease-in 6s forwards;
+}
+@keyframes sfx-pop {
+  from {
+    transform: translate(-50%, -50%) rotate(var(--r)) scale(0.2);
+    opacity: 0;
+  }
+}
+@keyframes sfx-fade {
+  to {
+    opacity: 0;
+  }
+}
