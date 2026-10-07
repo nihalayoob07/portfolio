@@ -34,13 +34,15 @@ export function Models() {
   return (
     <section id="models" className="relative z-10" aria-labelledby="models-title">
       <PrintPreload />
-      <div className="px-5 pt-24 pb-14 md:px-10 lg:pl-30">
-        <h2 id="models-title" className="text-[clamp(2.6rem,6vw,5.5rem)] leading-none font-medium tracking-tight">
-          3D <span className="text-accent">models</span>
-        </h2>
-        <p className="mt-5 max-w-md text-muted">
-          Designed in CAD, sliced in Bambu Studio, then printed and tested by me. Rendered here from the actual print files.
-        </p>
+      <div className="px-5 pt-24 pb-14 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <h2 id="models-title" className="text-[clamp(2.6rem,6vw,5.5rem)] leading-none font-medium tracking-tight">
+            3D <span className="text-accent">models</span>
+          </h2>
+          <p className="mt-5 max-w-md text-muted">
+            Designed in CAD, sliced in Bambu Studio, then printed and tested by me. Rendered here from the actual print files.
+          </p>
+        </div>
       </div>
       {list.map(({ model: m, screens }, i) => (
         <Showcase

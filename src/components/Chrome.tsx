@@ -16,8 +16,30 @@ function RollText({ children }: { children: string }) {
 }
 
 // Fixed header, side socials and resume link that sit over every section.
+// Which menu item the current scroll position belongs to (the hero and about text count as About).
+function useCurrentSection() {
+  const [current, setCurrent] = useState("#top");
+  useEffect(() => {
+    const ids = ["work", "models", "contact"];
+    const pick = () => {
+      const line = window.innerHeight * 0.4;
+      let found = "#top";
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= line) found = `#${id}`;
+      }
+      setCurrent(found);
+    };
+    pick();
+    window.addEventListener("scroll", pick, { passive: true });
+    return () => window.removeEventListener("scroll", pick);
+  }, []);
+  return current;
+}
+
 export function Chrome() {
   const [open, setOpen] = useState(false);
+  const current = useCurrentSection();
 
   useEffect(() => {
     if (!open) return;
@@ -44,8 +66,17 @@ export function Chrome() {
           </a>
           <nav aria-label="Sections" className="hidden items-center gap-8 text-[13px] font-semibold tracking-wider uppercase md:flex">
             {site.nav.map((item) => (
-              <a key={item.href} href={item.href} className="hover:text-accent-soft">
+              <a
+                key={item.href}
+                href={item.href}
+                aria-current={current === item.href ? "location" : undefined}
+                className="relative hover:text-accent-soft aria-[current]:text-accent-soft"
+              >
                 <RollText>{item.label}</RollText>
+                <span
+                  className={`absolute -bottom-1.5 left-0 h-px bg-accent transition-[width] duration-300 ${current === item.href ? "w-full" : "w-0"}`}
+                  aria-hidden="true"
+                />
               </a>
             ))}
             <SoundToggle variant="nav" className="uppercase" />

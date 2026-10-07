@@ -11,8 +11,8 @@ function hoverColor(hex: string) {
 export function TechStack() {
   return (
     <section className="relative z-10 px-5 py-24 md:px-10 md:py-32" aria-labelledby="stack-title">
-      <h2 id="stack-title" className="display text-center text-[clamp(2.6rem,6vw,5.5rem)]">
-        Tech stack
+      <h2 id="stack-title" className="text-center text-[clamp(2.6rem,6vw,5.5rem)] leading-none font-medium tracking-tight">
+        Tech <span className="text-accent">stack</span>
       </h2>
       <ul className="mx-auto mt-14 grid max-w-6xl grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7">
         {skills.map((s) => (

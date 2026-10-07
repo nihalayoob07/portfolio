@@ -29,9 +29,11 @@ export function WhatIDo() {
   return (
     <section ref={root} className="relative z-10 px-5 py-24 md:px-10 md:py-32" aria-labelledby="what-i-do">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-        <h2 id="what-i-do" className="display text-[clamp(3rem,8vw,7rem)] lg:sticky lg:top-32 lg:self-start">
-          What
-          <br />I do
+        <h2
+          id="what-i-do"
+          className="text-[clamp(2.6rem,6vw,5.5rem)] leading-none font-medium tracking-tight lg:sticky lg:top-32 lg:self-start"
+        >
+          What I <span className="text-accent">do</span>
         </h2>
         <div className="flex flex-col gap-6">
           {pillars.map((p, i) => {

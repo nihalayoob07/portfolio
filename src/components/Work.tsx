@@ -21,12 +21,11 @@ const more = projects.filter((p) => !p.reel);
 export function Work() {
   return (
     <section id="work" className="relative z-10" aria-labelledby="work-title">
-      <h2
-        id="work-title"
-        className="px-5 pt-24 pb-14 text-[clamp(2.6rem,6vw,5.5rem)] leading-none font-medium tracking-tight md:px-10 lg:pl-30"
-      >
-        My <span className="text-accent">work</span>
-      </h2>
+      <div className="px-5 pt-24 pb-14 md:px-10">
+        <h2 id="work-title" className="mx-auto max-w-6xl text-[clamp(2.6rem,6vw,5.5rem)] leading-none font-medium tracking-tight">
+          My <span className="text-accent">work</span>
+        </h2>
+      </div>
 
       {featured.map((p, i) => {
         const { Reel, screens } = REELS[p.reel!];
@@ -48,51 +47,60 @@ export function Work() {
         );
       })}
 
-      <div className="px-5 py-24 md:px-10 lg:pr-20 lg:pl-30">
-        <h3 className="eyebrow">More projects</h3>
-        <ul className="mt-8 border-b border-line">
-          {more.map((p) => (
-            <li key={p.slug} className="grid gap-x-10 gap-y-3 border-t border-line py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-              <div>
-                <p className="text-2xl font-semibold tracking-tight md:text-3xl">{p.title}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {p.category}
-                  {p.status && <span className="text-ink/60"> · {p.status}</span>}
-                </p>
-              </div>
-              <div>
-                <p className="leading-relaxed text-ink/85">{p.summary}</p>
-                <p className="mt-3 font-mono text-xs tracking-wide text-muted">{p.stack.join(" · ")}</p>
-                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-                  {p.links.map((l) => (
-                    <a
-                      key={l.href}
-                      href={l.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 font-medium text-accent-soft hover:text-ink"
-                    >
-                      {l.label} <ArrowUpRight className="size-4" aria-hidden="true" />
-                    </a>
-                  ))}
-                  {p.privateRepo && (
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted">
-                      <Lock className="size-3.5" aria-hidden="true" /> Private repo
-                    </span>
-                  )}
+      <div className="px-5 py-24 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <h3 className="eyebrow">More projects</h3>
+          <ul className="mt-8 border-b border-line">
+            {more.map((p) => (
+              <li
+                key={p.slug}
+                className="group relative grid gap-x-10 gap-y-3 border-t border-line py-8 transition-colors duration-300 hover:bg-white/[0.015] md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:px-4"
+              >
+                <span
+                  className="absolute top-0 left-0 h-px w-0 bg-accent transition-[width] duration-500 ease-out group-hover:w-full"
+                  aria-hidden="true"
+                />
+                <div>
+                  <p className="text-2xl font-semibold tracking-tight md:text-3xl">{p.title}</p>
+                  <p className="mt-1 text-sm text-muted">
+                    {p.category}
+                    {p.status && <span className="text-ink/60"> · {p.status}</span>}
+                  </p>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <a
-          href="https://github.com/nihalayoob07"
-          target="_blank"
-          rel="noreferrer"
-          className="mt-10 inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium hover:border-accent hover:text-accent-soft"
-        >
-          More on github.com/nihalayoob07 <ArrowUpRight className="size-4" aria-hidden="true" />
-        </a>
+                <div>
+                  <p className="leading-relaxed text-ink/85">{p.summary}</p>
+                  <p className="mt-3 font-mono text-xs tracking-wide text-muted">{p.stack.join(" · ")}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                    {p.links.map((l) => (
+                      <a
+                        key={l.href}
+                        href={l.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 font-medium text-accent-soft hover:text-ink"
+                      >
+                        {l.label} <ArrowUpRight className="size-4" aria-hidden="true" />
+                      </a>
+                    ))}
+                    {p.privateRepo && (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+                        <Lock className="size-3.5" aria-hidden="true" /> Private repo
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <a
+            href="https://github.com/nihalayoob07"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-10 inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium hover:border-accent hover:text-accent-soft"
+          >
+            More on github.com/nihalayoob07 <ArrowUpRight className="size-4" aria-hidden="true" />
+          </a>
+        </div>
       </div>
     </section>
   );

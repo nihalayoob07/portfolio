@@ -53,7 +53,7 @@ export function Journey() {
                   <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">{m.title}</h3>
                   <p className="mt-1 text-sm text-accent-soft">{m.org}</p>
                 </div>
-                <p className="display mt-3 text-4xl text-ink/25 md:mt-0 md:text-6xl">{m.when}</p>
+                <p className="display mt-3 text-4xl text-ink/25 tabular-nums md:mt-0 md:text-6xl">{m.when}</p>
               </div>
               <p className="max-w-md leading-relaxed text-ink/75 md:pl-10">{m.text}</p>
             </li>
