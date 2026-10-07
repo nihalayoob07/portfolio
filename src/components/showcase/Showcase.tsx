@@ -167,7 +167,8 @@ export function Screen({
     };
   }, [width, height, fill, follow]);
   return (
-    <div ref={box} className="absolute inset-x-0 top-16 bottom-2 overflow-hidden">
+    // On desktop the right 38% is left free for the captions.
+    <div ref={box} className="absolute inset-x-0 top-16 bottom-2 overflow-hidden lg:right-[38%] lg:left-20">
       <div ref={inner} className={`absolute top-0 left-0 origin-top-left ${className}`} style={{ width, height }}>
         {children}
       </div>
@@ -193,18 +194,19 @@ export function Cursor({ ref }: { ref: Ref<HTMLDivElement> }) {
   );
 }
 
-// Step captions, stacked in one spot at the bottom of the stage; the reel fades each one in and out.
+// Step captions in large type: in the free right-hand column on desktop, over a scrim at the
+// bottom on phones. They share one grid cell; the reel fades each one in and out.
 export function Captions({ items }: { items: string[] }) {
+  const n = String(items.length).padStart(2, "0");
   return (
-    <div className="pointer-events-none absolute inset-x-4 bottom-20 grid justify-items-center lg:bottom-9" aria-hidden="true">
-      {items.map((c) => (
-        <p
-          key={c}
-          data-caption
-          className="invisible col-start-1 row-start-1 rounded-full border border-line bg-bg/80 px-4 py-2 text-center text-sm text-ink/90 shadow-lg backdrop-blur md:text-base"
-        >
-          {c}
-        </p>
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 grid bg-linear-to-t from-bg via-bg/75 to-transparent px-5 pt-28 pb-20 lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[38%] lg:content-center lg:bg-none lg:py-0 lg:pr-16 lg:pl-10">
+      {items.map((c, i) => (
+        <div key={c} data-caption className="invisible col-start-1 row-start-1">
+          <p className="font-mono text-xs tracking-[0.2em] text-accent-soft">
+            {String(i + 1).padStart(2, "0")} / {n}
+          </p>
+          <p className="mt-3 text-[clamp(1.6rem,3vw,3.3rem)] leading-[1.08] font-medium tracking-tight text-balance text-ink">{c}</p>
+        </div>
       ))}
     </div>
   );

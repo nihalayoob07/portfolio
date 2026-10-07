@@ -167,9 +167,15 @@ function Print({ model, progress, clickedAt, onReady }: Omit<PrintCanvasProps, "
     s.lid += (target.lid - s.lid) * k;
     s.lift += ((target.lift ?? 0) - s.lift) * k;
 
+    // On desktop the captions take the right 38%, so the print is framed in the left 62%:
+    // the view is shifted right (the print appears left) and fitted to that narrower width.
+    const wide = size.width >= 1024;
+    const room = wide ? 0.62 : 1;
+    if (wide) camera.setViewOffset(size.width, size.height, (size.width * (1 - room)) / 2, 0, size.width, size.height);
+    else camera.clearViewOffset();
     // Fit the bounding sphere to the narrower field of view (portrait screens are narrow).
     const vfov = rad(camera.fov);
-    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * (size.width / size.height));
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * ((size.width * room) / size.height));
     const d = (radius / Math.sin(Math.min(vfov, hfov) / 2)) * s.dist;
     const aim = centre.clone().setY(centre.y * 0.92 + radius * s.lift);
     camera.position.set(
