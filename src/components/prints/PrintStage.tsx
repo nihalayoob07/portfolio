@@ -4,6 +4,8 @@ import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { MousePointerClick } from "lucide-react";
 import { useGSAP } from "@/lib/gsap";
+import { keyClick } from "@/lib/sfx";
+import { SoundToggle } from "../SoundToggle";
 import type { ModelEntry } from "@/content/models";
 import { Captions, useShowcase, type Caption, type CaptionPlace } from "../showcase/Showcase";
 import { caption, reelTimeline } from "../showcase/engine";
@@ -16,9 +18,16 @@ const STORY = 4;
 
 // Captions per print and where they go. `aside` frames the print left of centre to make room
 // for a caption column; the rest stay centred.
-const STAGES: Record<string, { captions: Caption[]; place?: CaptionPlace; aside?: boolean }> = {
+// `times` pins captions to timeline spans; otherwise they share the story evenly.
+const STAGES: Record<string, { captions: Caption[]; place?: CaptionPlace; aside?: boolean; times?: [number, number][] }> = {
   medbox: {
     place: "edge",
+    // "Scroll to open" while it's still shut; the lid starts moving at about 1.25 (see POSES.medbox).
+    times: [
+      [0.62, 1.3],
+      [1.45, 2.9],
+      [3.05, 4.2],
+    ],
     captions: [
       ["Scroll to open"],
       ["Printed hinge", "The lid swings on printed pins"],
@@ -83,8 +92,11 @@ export function PrintStage({ model }: { model: ModelEntry }) {
         0.2,
       );
       const caps = el.querySelectorAll("[data-caption]");
-      const span = (STORY - 0.6) / caps.length;
-      caps.forEach((c, i) => caption(tl, c, 0.9 + i * span, 0.85 + (i + 1) * span));
+      const span = (STORY - 0.4) / caps.length;
+      caps.forEach((c, i) => {
+        const [from, to] = stage.times?.[i] ?? [0.62 + i * span, 0.55 + (i + 1) * span];
+        caption(tl, c, from, to);
+      });
     },
     { scope: root },
   );
@@ -92,6 +104,7 @@ export function PrintStage({ model }: { model: ModelEntry }) {
   const click = () => {
     clickedAt.current = performance.now();
     spawnSfx(sfx.current!);
+    keyClick();
   };
 
   return (
@@ -113,15 +126,18 @@ export function PrintStage({ model }: { model: ModelEntry }) {
       {clicker && (
         <>
           <div ref={sfx} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
-          <button
-            type="button"
-            onClick={click}
-            className="absolute top-22 right-5 flex items-center gap-2.5 rounded-full bg-accent px-6 py-3.5 text-sm font-bold tracking-[0.16em] text-white uppercase shadow-[0_0_0_6px_rgb(79_125_255/0.18),0_10px_40px_rgb(79_125_255/0.55)] transition hover:scale-105 active:scale-95 md:right-8 md:text-base"
-          >
-            <span className="absolute inset-0 animate-ping rounded-full bg-accent/40 [animation-duration:1.8s]" aria-hidden="true" />
-            <MousePointerClick className="relative size-5" aria-hidden="true" />
-            <span className="relative">Click anywhere</span>
-          </button>
+          <div className="absolute top-22 right-5 flex flex-col items-end gap-3 md:right-8">
+            <button
+              type="button"
+              onClick={click}
+              className="relative flex items-center gap-2.5 rounded-full bg-accent px-6 py-3.5 text-sm font-bold tracking-[0.16em] text-white uppercase shadow-[0_0_0_6px_rgb(79_125_255/0.18),0_10px_40px_rgb(79_125_255/0.55)] transition hover:scale-105 active:scale-95 md:text-base"
+            >
+              <span className="absolute inset-0 animate-ping rounded-full bg-accent/40 [animation-duration:1.8s]" aria-hidden="true" />
+              <MousePointerClick className="relative size-5" aria-hidden="true" />
+              <span className="relative">Click anywhere</span>
+            </button>
+            <SoundToggle />
+          </div>
         </>
       )}
       <Captions items={stage.captions} place={stage.place} />

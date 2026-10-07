@@ -30,7 +30,8 @@ type Pose = { az: number; el: number; dist: number; lid: number; lift?: number }
 const POSES: Record<string, (p: number) => Pose> = {
   // The lid swings open on its hinge while the camera rises to look inside.
   medbox: (p) => {
-    const open = ease(p, 0.1, 0.62);
+    // Waits for the "Scroll to open" caption, then opens over the middle of the scroll.
+    const open = ease(p, 0.26, 0.7);
     return { az: rad(30 - 45 * p), el: rad(16 + 26 * ease(p, 0.05, 0.7)), dist: 1 + 0.55 * open, lid: rad(-108) * open, lift: 0.62 * open };
   },
   // The cat faces a box corner (-45°); the camera drifts across its face.

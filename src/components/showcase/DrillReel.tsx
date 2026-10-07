@@ -3,6 +3,8 @@
 import { useRef } from "react";
 import localFont from "next/font/local";
 import { useGSAP } from "@/lib/gsap";
+import { alarm } from "@/lib/sfx";
+import { SoundToggle } from "../SoundToggle";
 import { Captions, type Caption, Screen } from "./Showcase";
 import { INTRO, caption, reelTimeline } from "./engine";
 
@@ -40,9 +42,13 @@ export function DrillReel() {
       const tl = reelTimeline(el);
 
       // Ringing is a looping CSS shake, switched on while the playhead is inside the ring span.
+      // The alarm sound follows the same span.
+      let ringing = false;
       tl.eventCallback("onUpdate", () => {
         const t = tl.time();
-        phone.dataset.ringing = String(t > RING[0] && t < RING[1]);
+        const now = t > RING[0] && t < RING[1];
+        phone.dataset.ringing = String(now);
+        if (now !== ringing) alarm((ringing = now));
       });
 
       caption(tl, caps[0], 0.9, 1.6);
@@ -67,6 +73,7 @@ export function DrillReel() {
         caption(tl, caps[i + 2], at + 0.2, at + 0.8);
       });
       tl.to({}, { duration: 0.3 }, 4.05 + SCREENS.length * 0.8);
+      return () => alarm(false);
     },
     { scope: root },
   );
@@ -107,6 +114,7 @@ export function DrillReel() {
           </div>
         </div>
       </Screen>
+      <SoundToggle className="absolute top-22 right-5 md:right-8" />
       <Captions items={CAPTIONS} />
     </div>
   );
