@@ -93,6 +93,13 @@ export function PrintStage({ model }: { model: ModelEntry }) {
         },
         0.2,
       );
+      // While the panel title is up, the loader waits below it, smaller; then it takes the centre.
+      tl.fromTo(
+        el.querySelector("[data-loader]"),
+        { y: () => window.innerHeight * 0.32, scale: 0.55 },
+        { y: 0, scale: 1, duration: 0.5, ease: "power1.inOut" },
+        0.1,
+      );
       const caps = el.querySelectorAll("[data-caption]");
       const span = (STORY - 0.4) / caps.length;
       caps.forEach((c, i) => {
@@ -134,7 +141,7 @@ export function PrintStage({ model }: { model: ModelEntry }) {
       {clicker && (
         <>
           <div ref={sfx} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
-          <div data-own-sfx className="absolute top-22 right-5 flex flex-col items-end gap-3 md:right-8">
+          <div className="absolute top-22 right-5 flex flex-col items-end gap-3 md:right-8">
             <button
               type="button"
               onClick={click}

@@ -3,8 +3,8 @@
 // Sound effects, synthesised with Web Audio so there are no files to load.
 // Browsers only allow sound after a click, tap or key press, so the first one anywhere on the
 // page unlocks it; until then the state is "locked". Muting applies to every effect and is
-// remembered on this device. Besides the reels' own sounds, links and buttons tick on hover and
-// tock on press; anything inside [data-own-sfx] makes its own sound instead.
+// remembered on this device. The effects: Drill's alarm, the cat clicker's switch and the demo
+// cursor's mouse clicks.
 
 type State = "locked" | "on" | "muted";
 
@@ -57,30 +57,6 @@ if (typeof window !== "undefined") {
   };
   // iOS only lets audio start on a tap's end or a click, not on pointerdown, so listen for all of them.
   for (const type of ["pointerdown", "touchend", "click", "keydown"]) window.addEventListener(type, unlock, { capture: true });
-
-  const INTERACTIVE = "a, button, [role=button], input, select, summary";
-  const target = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.(INTERACTIVE) ?? null;
-    return el && !el.closest("[data-own-sfx]") ? el : null;
-  };
-  let hovered: Element | null = null;
-  let hoveredAt = 0;
-  document.addEventListener(
-    "pointerover",
-    (e) => {
-      if (e.pointerType !== "mouse") return;
-      const el = target(e);
-      if (el === hovered) return;
-      hovered = el;
-      const now = performance.now();
-      if (el && now - hoveredAt > 60 && live()) {
-        hoveredAt = now;
-        hoverTick();
-      }
-    },
-    true,
-  );
-  document.addEventListener("pointerdown", (e) => target(e) && pressTock(), true);
 }
 
 export const sound = {
@@ -91,10 +67,9 @@ export const sound = {
   state(): State {
     return muted ? "muted" : ctx?.state === "running" ? "on" : "locked";
   },
-  // Called from a click, so it can also unlock.
-  toggle() {
-    if (performance.now() - unlockedAt < 1000) muted = false;
-    else muted = !muted;
+  // Both are called from a click, so they can also unlock audio.
+  set(on: boolean) {
+    muted = !on;
     try {
       localStorage.setItem(MUTE_KEY, muted ? "1" : "0");
     } catch {
@@ -102,6 +77,9 @@ export const sound = {
     }
     void audio().resume();
     emit();
+  },
+  toggle() {
+    sound.set(performance.now() - unlockedAt < 1000 || muted);
   },
 };
 
@@ -187,63 +165,4 @@ export function keyClick() {
     tick(t, 3400, 0.6, 0.02);
     tick(t + 0.085, 4300, 0.25, 0.012);
   });
-}
-
-// A soft, high tick for hovering a link or button.
-function hoverTick() {
-  const c = ctx!;
-  const t = c.currentTime + 0.003;
-  const o = c.createOscillator();
-  o.type = "triangle";
-  o.frequency.setValueAtTime(2300, t);
-  o.frequency.exponentialRampToValueAtTime(1700, t + 0.03);
-  const g = c.createGain();
-  g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(0.03, t + 0.002);
-  g.gain.exponentialRampToValueAtTime(0.0005, t + 0.035);
-  o.connect(g).connect(master!);
-  o.start(t);
-  o.stop(t + 0.04);
-}
-
-// A rounded "tock" for pressing one.
-function pressTock() {
-  play(() => {
-    const c = ctx!;
-    const t = c.currentTime + 0.003;
-    const o = c.createOscillator();
-    o.frequency.setValueAtTime(560, t);
-    o.frequency.exponentialRampToValueAtTime(260, t + 0.05);
-    const g = c.createGain();
-    g.gain.setValueAtTime(0.12, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
-    o.connect(g).connect(master!);
-    o.start(t);
-    o.stop(t + 0.08);
-    tick(t, 2000, 0.05, 0.01);
-  });
-}
-
-let whooshedAt = 0;
-// A quiet, airy sweep as a full-screen panel wipes in.
-export function whoosh() {
-  const now = performance.now();
-  if (!live() || now - whooshedAt < 350) return;
-  whooshedAt = now;
-  const c = ctx!;
-  const t = c.currentTime + 0.01;
-  const src = c.createBufferSource();
-  src.buffer = noise;
-  const bp = c.createBiquadFilter();
-  bp.type = "bandpass";
-  bp.Q.value = 0.9;
-  bp.frequency.setValueAtTime(320, t);
-  bp.frequency.exponentialRampToValueAtTime(2200, t + 0.45);
-  const g = c.createGain();
-  g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(0.09, t + 0.18);
-  g.gain.linearRampToValueAtTime(0, t + 0.6);
-  src.connect(bp).connect(g).connect(master!);
-  src.start(t);
-  src.stop(t + 0.62);
 }
