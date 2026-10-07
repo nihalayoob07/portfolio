@@ -3,8 +3,7 @@
 // Sound effects, synthesised with Web Audio so there are no files to load.
 // Browsers only allow sound after a click, tap or key press, so the first one anywhere on the
 // page unlocks it; until then the state is "locked". Muting applies to every effect and is
-// remembered on this device. The effects: Drill's alarm, the cat clicker's switch and the demo
-// cursor's mouse clicks.
+// remembered on this device. The effects: Drill's alarm and the cat clicker's switch.
 
 type State = "locked" | "on" | "muted";
 
@@ -154,20 +153,6 @@ function tick(t: number, freq: number, level: number, length: number) {
 }
 
 // A mechanical key: the press, then a lighter click as it springs back.
-let mouseAt = 0;
-// A light mouse click for the demo cursor (scroll-driven, so it only plays once audio is unlocked).
-// `down` is the press; the release is fainter.
-export function mouseClick(down = true) {
-  const now = performance.now();
-  if (!live() || now - mouseAt < 60) return;
-  mouseAt = now;
-  const t = ctx!.currentTime + 0.003;
-  if (down) {
-    tick(t, 2800, 0.16, 0.01);
-    tick(t + 0.07, 3600, 0.07, 0.008);
-  } else tick(t, 3600, 0.08, 0.008);
-}
-
 // A filtered noise burst: the snap of plastic on plastic.
 function snap(t: number, type: BiquadFilterType, freq: number, q: number, level: number, length: number) {
   const c = ctx!;
