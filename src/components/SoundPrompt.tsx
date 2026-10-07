@@ -4,19 +4,12 @@ import { useEffect, useRef } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { sound } from "@/lib/sfx";
 
-const ASKED = "sfx-asked";
-
-// Asks once per visit whether to play sound. Either answer is a click, which is also what the
+// Asks on every page load whether to play sound. Either answer is a click, which is also what the
 // browser needs before it lets the page make any sound at all.
 export function SoundPrompt() {
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    try {
-      if (sessionStorage.getItem(ASKED)) return;
-    } catch {
-      /* no storage: ask anyway */
-    }
     dialog.current!.showModal();
     // Hold the page still behind it (Lenis ignores wheel events inside [data-lenis-prevent]).
     document.documentElement.style.overflow = "hidden";
@@ -24,11 +17,6 @@ export function SoundPrompt() {
 
   const answer = (on: boolean) => {
     sound.set(on);
-    try {
-      sessionStorage.setItem(ASKED, "1");
-    } catch {
-      /* asked again next load, harmless */
-    }
     document.documentElement.style.overflow = "";
     dialog.current!.close();
   };
