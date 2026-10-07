@@ -5,16 +5,16 @@
     "glb": "/models/medbox.glb",
     "thumb": "/models/medbox.webp",
     "assembled": true,
-    "parts": 7,
+    "parts": 9,
     "plates": 5,
-    "sourceTriangles": 20408,
-    "displayTriangles": 20408,
+    "sourceTriangles": 23212,
+    "displayTriangles": 23212,
     "size": [
       162.4,
       169,
-      85
+      117.3
     ],
-    "bytes": 137168
+    "bytes": 157908
   },
   {
     "slug": "z-ring",

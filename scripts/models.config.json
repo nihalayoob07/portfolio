@@ -4,9 +4,24 @@
     "title": "Medicine box",
     "source": "~/Downloads/MEDBOX_COMPLETE.3mf",
     "assembly": "bambu",
-    "omit": [
-      "handle_bail"
-    ]
+    "omit": ["latch_catch_block", "latch_insert"],
+    "include": ["geometry_2"],
+    "place": {
+      "geometry_1": {
+        "rotate": [180, 0, 0],
+        "center": [0, 0, 88.3]
+      },
+      "geometry_2": {
+        "center": [0, -81.25, 35.03]
+      },
+      "handle_bail": {
+        "rotate": [0, 0, 180],
+        "center": [0, 25, 110.8]
+      }
+    },
+    "colors": {
+      "geometry_2": "#80FFFF"
+    }
   },
   {
     "slug": "z-ring",
@@ -21,11 +36,7 @@
     "assembly": "bambu",
     "place": {
       "top.stl": {
-        "center": [
-          0,
-          0,
-          74.5
-        ]
+        "center": [0, 0, 74.5]
       }
     }
   },

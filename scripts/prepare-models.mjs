@@ -8,6 +8,7 @@
 //                          (Metadata/model_settings.config <assemble_item>), with
 //                          "place" overrides for parts it has no position for
 //   "assembly": "plates" - every print plate as laid out for printing, plates in a grid
+// "include" brings in objects left beside the plates; "omit" drops parts.
 // Part colours come from each object's filament in the project, unless "colors"
 // overrides them. Units stay in millimetres.
 import fs from "node:fs";
@@ -66,11 +67,14 @@ function parseModelFile(xml) {
     }
     objects.set(attr(head, "id"), obj);
   }
-  const items = [...xml.matchAll(/<item\b([^>]*)\/>/g)].map(([, a]) => ({ objectid: attr(a, "objectid"), transform: attr(a, "transform") }));
+  const items = [...xml.matchAll(/<item\b([^>]*)\/>/g)].map(([, a]) => ({
+    objectid: attr(a, "objectid"),
+    transform: attr(a, "transform"),
+  }));
   return { objects, items };
 }
 
-function load3mf(file) {
+function load3mf(file, include = new Set()) {
   const zip = unzipSync(new Uint8Array(fs.readFileSync(file)));
   const files = new Map();
   for (const [name, data] of Object.entries(zip)) if (name.endsWith(".model")) files.set("/" + name, parseModelFile(strFromU8(data)));
@@ -106,7 +110,8 @@ function load3mf(file) {
 
   // One entry per build item; geometry is built later once the layout is known.
   const items = main.items
-    .filter((item) => !plateOf.size || plateOf.has(item.objectid)) // objects left beside the plates aren't printed
+    // Objects left beside the plates aren't printed, unless the entry asks for them by name.
+    .filter((item) => !plateOf.size || plateOf.has(item.objectid) || include.has(meta.get(item.objectid)?.name))
     .map((item) => {
       const m = meta.get(item.objectid) ?? { vols: new Map() };
       return {
@@ -197,7 +202,13 @@ function place(positions, { rotate = [0, 0, 0], center }) {
   const c = bounds(positions).getCenter(new THREE.Vector3());
   const r = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...rotate.map(THREE.MathUtils.degToRad), "XYZ"));
   const to = center ? new THREE.Vector3(...center) : c;
-  transform(positions, new THREE.Matrix4().makeTranslation(to.x, to.y, to.z).multiply(r).multiply(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z)));
+  transform(
+    positions,
+    new THREE.Matrix4()
+      .makeTranslation(to.x, to.y, to.z)
+      .multiply(r)
+      .multiply(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z)),
+  );
 }
 
 function simplify(part, ratio) {
@@ -208,7 +219,7 @@ function simplify(part, ratio) {
 }
 
 async function convert(entry) {
-  const { items, geometry, plates, thumb } = load3mf(entry.source.replace(/^~(?=[/\\])/, os.homedir()));
+  const { items, geometry, plates, thumb } = load3mf(entry.source.replace(/^~(?=[/\\])/, os.homedir()), new Set(entry.include || []));
   const assembled = entry.assembly === "bambu";
   const omit = new Set(entry.omit || []);
 
@@ -274,7 +285,10 @@ async function convert(entry) {
     // glTF colours are linear; THREE.Color converts from the sRGB hex.
     if (!materials.has(p.color)) {
       const c = new THREE.Color(p.color);
-      materials.set(p.color, doc.createMaterial(p.color).setBaseColorFactor([c.r, c.g, c.b, 1]).setRoughnessFactor(0.6).setMetallicFactor(0));
+      materials.set(
+        p.color,
+        doc.createMaterial(p.color).setBaseColorFactor([c.r, c.g, c.b, 1]).setRoughnessFactor(0.6).setMetallicFactor(0),
+      );
     }
     const prim = doc
       .createPrimitive()
