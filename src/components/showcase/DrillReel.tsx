@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import localFont from "next/font/local";
 import { useGSAP } from "@/lib/gsap";
-import { Captions, Screen } from "./Showcase";
+import { Captions, type Caption, Screen } from "./Showcase";
 import { INTRO, caption, reelTimeline } from "./engine";
 
 // The alarm's own counter font, so the live count matches the capture underneath it.
@@ -17,15 +17,15 @@ const STEPS = 30;
 const RING = [INTRO, 4.0]; // timeline span where the alarm rings
 const COUNT = [1.5, 3.9]; // and where the steps are counted
 
-const CAPTIONS = [
-  "5:32 AM. The alarm goes off",
-  "It only stops after 30 real steps, checked with the step sensor",
-  "Then the morning briefing",
-  "Today's workout",
-  "An exercise library",
-  "Form demos for every move",
-  "A 12-week programme",
-  "And your progress",
+const CAPTIONS: Caption[] = [
+  ["5:32 AM", "The alarm goes off"],
+  ["Walk 30 steps", "It only stops once the step sensor has counted them"],
+  ["Morning briefing"],
+  ["Today's workout"],
+  ["Exercise library"],
+  ["Form demos", "For every move"],
+  ["12-week programme"],
+  ["Progress"],
 ];
 
 export function DrillReel() {

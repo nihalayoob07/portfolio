@@ -19,6 +19,8 @@ export type PrintCanvasProps = {
   // performance.now() of the last click on the clicker.
   clickedAt: RefObject<number>;
   running: boolean;
+  // Frame the print left of centre, leaving the right of the screen to captions (desktop only).
+  aside: boolean;
   onReady: () => void;
 };
 
@@ -133,7 +135,7 @@ function usePieces(url: string) {
   }, [scene]);
 }
 
-function Print({ model, progress, clickedAt, onReady }: Omit<PrintCanvasProps, "running">) {
+function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasProps, "running">) {
   const { pieces, box } = usePieces(model.glb);
   const lid = useRef<THREE.Group>(null);
   const pressed = useRef<THREE.Group>(null);
@@ -169,7 +171,7 @@ function Print({ model, progress, clickedAt, onReady }: Omit<PrintCanvasProps, "
 
     // On desktop the captions take the right 38%, so the print is framed in the left 62%:
     // the view is shifted right (the print appears left) and fitted to that narrower width.
-    const wide = size.width >= 1024;
+    const wide = aside && size.width >= 1024;
     const room = wide ? 0.62 : 1;
     if (wide) camera.setViewOffset(size.width, size.height, (size.width * (1 - room)) / 2, 0, size.width, size.height);
     else camera.clearViewOffset();
@@ -215,7 +217,99 @@ function Print({ model, progress, clickedAt, onReady }: Omit<PrintCanvasProps, "
       )}
       <group ref={pressed}>{pieces.filter(isPressed).map(mesh)}</group>
       <group ref={stem}>{pieces.filter(isStem).map(mesh)}</group>
+      {model.slug === "cat-clicker" && <ClickBanner centre={centre} radius={radius} clickedAt={clickedAt} />}
       <Studio radius={radius} centre={centre} orbit={model.slug === "z-ring"} />
+    </group>
+  );
+}
+
+// Behind the cat: three rows of giant "CLICK!" scrolling in opposite directions, always facing the
+// camera. They're drawn after the backdrop and before the print, ignoring depth, so they sit on the
+// set but under the model. Each click flashes them and speeds them up for a moment.
+const BANNER_ROWS = [
+  { fill: false, color: "#3a4570", y: 1 },
+  { fill: true, color: "#4f7dff", y: 0 },
+  { fill: false, color: "#3a4570", y: -1 },
+];
+function bannerTexture(fill: boolean) {
+  const canvas = document.createElement("canvas");
+  const g = canvas.getContext("2d")!;
+  const font = `900 190px ${getComputedStyle(document.body).fontFamily}`;
+  g.font = font;
+  const word = g.measureText("CLICK!  ").width;
+  canvas.width = Math.ceil(word * 3);
+  canvas.height = 240;
+  // Resizing a canvas resets its state.
+  g.font = font;
+  g.textBaseline = "middle";
+  g.lineWidth = 6;
+  g.lineJoin = "round";
+  g.fillStyle = g.strokeStyle = "#fff"; // white, tinted by the material
+  g.setTransform(1, 0, -0.22, 1, 26, 0); // slanted, comic style
+  for (let i = 0; i < 3; i++) {
+    if (fill) g.fillText("CLICK!", i * word, 124);
+    else g.strokeText("CLICK!", i * word, 124);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return { tex, aspect: canvas.width / canvas.height };
+}
+
+function ClickBanner({ centre, radius, clickedAt }: { centre: THREE.Vector3; radius: number; clickedAt: RefObject<number> }) {
+  const group = useRef<THREE.Group>(null);
+  const rows = useMemo(
+    () =>
+      BANNER_ROWS.map((r) => {
+        const { tex, aspect } = bannerTexture(r.fill);
+        const material = new THREE.MeshBasicMaterial({
+          map: tex,
+          color: r.color,
+          alphaTest: 0.5,
+          alphaToCoverage: true,
+          depthTest: false,
+          depthWrite: false,
+          fog: false,
+        });
+        return { ...r, tex, aspect, material, base: new THREE.Color(r.color) };
+      }),
+    [],
+  );
+  const meshes = useRef<THREE.Mesh[]>([]);
+  useFrame((state, dt) => {
+    const cam = state.camera as THREE.PerspectiveCamera;
+    const toward = centre.clone().sub(cam.position).normalize();
+    const at = centre.clone().addScaledVector(toward, radius * 1.6);
+    const h = 2 * Math.tan(rad(cam.fov) / 2) * cam.position.distanceTo(at);
+    const w = h * cam.aspect;
+    group.current!.position.copy(at);
+    group.current!.quaternion.copy(cam.quaternion);
+    const kick = Math.exp(-((performance.now() - (clickedAt.current ?? -1e9)) / 1000) * 5);
+    rows.forEach((r, i) => {
+      const m = meshes.current[i];
+      const rowH = h * 0.24 * (1 + 0.05 * kick);
+      m.scale.set(w * 1.4, rowH, 1);
+      m.position.y = r.y * h * 0.27;
+      r.tex.repeat.x = (w * 1.4) / rowH / r.aspect;
+      r.tex.offset.x += dt * (0.04 + kick * 0.5) * (i % 2 ? -1 : 1);
+      r.material.color.copy(r.base).multiplyScalar(1 + kick * 0.9);
+    });
+  });
+  return (
+    <group ref={group}>
+      {rows.map((r, i) => (
+        <mesh
+          key={i}
+          ref={(m) => {
+            if (m) meshes.current[i] = m;
+          }}
+          material={r.material}
+          renderOrder={-1}
+        >
+          <planeGeometry />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -264,12 +358,12 @@ function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vecto
   return (
     <>
       {orbit ? (
-        <mesh rotation-x={-Math.PI / 2} receiveShadow>
+        <mesh rotation-x={-Math.PI / 2} receiveShadow renderOrder={-2}>
           <circleGeometry args={[r * 40, 64]} />
           <meshStandardMaterial color="#111114" roughness={0.92} />
         </mesh>
       ) : (
-        <mesh geometry={sweep} receiveShadow>
+        <mesh geometry={sweep} receiveShadow renderOrder={-2}>
           <meshStandardMaterial color="#111114" roughness={0.92} side={THREE.DoubleSide} />
         </mesh>
       )}
@@ -305,7 +399,7 @@ function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vecto
   );
 }
 
-export default function PrintCanvas({ model, progress, clickedAt, running, onReady }: PrintCanvasProps) {
+export default function PrintCanvas({ model, progress, clickedAt, running, aside, onReady }: PrintCanvasProps) {
   return (
     <Canvas
       shadows="percentage"
@@ -317,7 +411,7 @@ export default function PrintCanvas({ model, progress, clickedAt, running, onRea
       <color attach="background" args={[BG]} />
       <fog attach="fog" args={[BG, 1000, 4000]} />
       <Suspense fallback={null}>
-        <Print model={model} progress={progress} clickedAt={clickedAt} onReady={onReady} />
+        <Print model={model} progress={progress} clickedAt={clickedAt} aside={aside} onReady={onReady} />
       </Suspense>
       <EffectComposer multisampling={4}>
         <N8AO aoRadius={Math.max(...model.size) * 0.08} distanceFalloff={1} intensity={2.4} quality="medium" halfRes />

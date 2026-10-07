@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@/lib/gsap";
 import reel from "@/content/reels/printvault.json";
-import { Ambient, Captions, Cursor, Screen } from "./Showcase";
+import { Ambient, Captions, type Caption, Cursor, Screen } from "./Showcase";
 import { INTRO, caption, click, fadeIn, moveTo, reelTimeline, typeText } from "./engine";
 
 const [W, H] = reel.viewport;
@@ -26,12 +26,12 @@ const FIELDS: [keyof typeof T, string][] = [
 const HOME_PAN = Math.round(T.product.y + T.product.h / 2 - 520);
 const CHECKOUT_PAN = F.checkout.height - H;
 
-const CAPTIONS = [
-  "Browse the catalogue",
-  "Open a product and add it to the cart",
-  "The cart stays on the customer's device",
-  "Guest checkout with live shipping and GST",
-  "Payment through Razorpay, verified on the server",
+const CAPTIONS: Caption[] = [
+  ["Browse", "The live catalogue at theprintvault.in"],
+  ["Add to cart", "Open a product, add it in one click"],
+  ["Cart on the device", "Kept in the customer's own browser"],
+  ["Guest checkout", "Live shipping quote and a full GST breakdown"],
+  ["Pay with Razorpay", "UPI, cards or netbanking, verified on the server"],
 ];
 
 const typing = (text: string) => Math.max(0.2, text.length * 0.03);

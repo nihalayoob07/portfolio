@@ -2,9 +2,10 @@
 
 import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { MousePointerClick } from "lucide-react";
 import { useGSAP } from "@/lib/gsap";
 import type { ModelEntry } from "@/content/models";
-import { Captions, useShowcase } from "../showcase/Showcase";
+import { Captions, useShowcase, type Caption, type CaptionPlace } from "../showcase/Showcase";
 import { caption, reelTimeline } from "../showcase/engine";
 
 // three.js only loads once a print panel is a screen away.
@@ -13,11 +14,26 @@ const PrintCanvas = dynamic(() => import("./PrintCanvas"), { ssr: false });
 // Timeline units the print's own motion runs over, after the panel title clears.
 const STORY = 4;
 
-const CAPTIONS: Record<string, string[]> = {
-  medbox: ["Scroll to open it", "The lid swings on printed hinge pins", "Compartments inside, a fold-down handle on top"],
-  "cat-clicker": ["A keyboard switch sits under the head", "Click anywhere. Then keep clicking"],
-  "tissue-box": ["Made to order: any name, raised on the front", "Ribbed body, drop-in lid"],
-  "z-ring": ["A printed crystal set into the ring", "One turn all the way round"],
+// Captions per print and where they go. `aside` frames the print left of centre to make room
+// for a caption column; the rest stay centred.
+const STAGES: Record<string, { captions: Caption[]; place?: CaptionPlace; aside?: boolean }> = {
+  medbox: {
+    place: "edge",
+    captions: [
+      ["Scroll to open"],
+      ["Printed hinge", "The lid swings on printed pins"],
+      ["Room inside", "Compartments, and a fold-down handle on top"],
+    ],
+  },
+  "cat-clicker": { captions: [] },
+  "tissue-box": {
+    aside: true,
+    captions: [
+      ["Customisable tissue box", "Made to order"],
+      ["Your name on it", "Raised lettering across the ribbed front"],
+    ],
+  },
+  "z-ring": { captions: [] },
 };
 
 const WORDS = ["CLICK!", "CLACK!", "CLICK", "TAK!", "*click*", "CLIK!", "CLICK!!"];
@@ -48,7 +64,7 @@ export function PrintStage({ model }: { model: ModelEntry }) {
   const onReady = useCallback(() => setReady(true), []);
   const { onScreen } = useShowcase();
   const clicker = model.slug === "cat-clicker";
-  const captions = CAPTIONS[model.slug] ?? [];
+  const stage = STAGES[model.slug] ?? { captions: [] };
 
   useGSAP(
     () => {
@@ -90,7 +106,7 @@ export function PrintStage({ model }: { model: ModelEntry }) {
           : undefined
       }
     >
-      <PrintCanvas model={model} progress={progress} clickedAt={clickedAt} running={onScreen} onReady={onReady} />
+      <PrintCanvas model={model} progress={progress} clickedAt={clickedAt} running={onScreen} aside={!!stage.aside} onReady={onReady} />
       {!ready && (
         <p className="absolute inset-x-0 top-1/2 text-center font-mono text-xs tracking-widest text-ink/50 uppercase">Loading model</p>
       )}
@@ -100,13 +116,15 @@ export function PrintStage({ model }: { model: ModelEntry }) {
           <button
             type="button"
             onClick={click}
-            className="absolute top-24 right-5 rounded-full border border-line bg-bg/70 px-4 py-2 font-mono text-xs tracking-widest text-ink/80 uppercase backdrop-blur hover:border-accent md:right-8"
+            className="absolute top-22 right-5 flex items-center gap-2.5 rounded-full bg-accent px-6 py-3.5 text-sm font-bold tracking-[0.16em] text-white uppercase shadow-[0_0_0_6px_rgb(79_125_255/0.18),0_10px_40px_rgb(79_125_255/0.55)] transition hover:scale-105 active:scale-95 md:right-8 md:text-base"
           >
-            Click anywhere
+            <span className="absolute inset-0 animate-ping rounded-full bg-accent/40 [animation-duration:1.8s]" aria-hidden="true" />
+            <MousePointerClick className="relative size-5" aria-hidden="true" />
+            <span className="relative">Click anywhere</span>
           </button>
         </>
       )}
-      <Captions items={captions} />
+      <Captions items={stage.captions} place={stage.place} />
     </div>
   );
 }

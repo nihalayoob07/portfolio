@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { FileText, Folder } from "lucide-react";
 import { useGSAP } from "@/lib/gsap";
-import { Captions, Cursor, Screen } from "./Showcase";
+import { Captions, type Caption, Cursor, Screen } from "./Showcase";
 import { INTRO, caption, click, fadeIn, moveTo, reelTimeline } from "./engine";
 
 // A 1440 × 900 desktop with Deck's notch on top. The notch states are real captures of
@@ -22,13 +22,13 @@ const FRAMES = {
 const PHOTO = { x: 40, y: 360 }; // desktop icon, top-left of its tile
 const FILES_TAB = [NOTCH.x + 0.208 * NOTCH.w, 0.085 * NOTCH.h] as const;
 
-const CAPTIONS = [
-  "Drag a photo onto the notch",
-  "It lands on your phone over Wi-Fi, even when the phone is locked",
-  "Hover the notch to peek",
-  "Click it open for notes and to-dos",
-  "Switch to Files",
-  "One notch on every monitor, sharing one panel",
+const CAPTIONS: Caption[] = [
+  ["Drag", "Drop a photo onto the notch"],
+  ["Sent", "It lands on your phone over Wi-Fi, even when the phone is locked"],
+  ["Peek", "Hover the notch"],
+  ["Notes and to-dos", "Click the notch open"],
+  ["Files", "Switch tabs"],
+  ["Every monitor", "One notch on each screen, sharing one panel"],
 ];
 
 function PhotoTile() {

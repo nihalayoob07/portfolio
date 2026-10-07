@@ -122,12 +122,14 @@ export function Showcase({
 // A fixed-size logical screen (the recording's own pixels), scaled to fit the stage below the
 // site header. Everything inside is positioned in those pixels, so recorded coordinates work as-is.
 // On portrait phones a landscape screen would be tiny, so it's shown at twice the size and pans
-// sideways to keep `follow` (the demo cursor) in view.
+// sideways to keep `follow` (the demo cursor) in view. `full` uses the whole stage on desktop
+// instead of leaving the right-hand column to the captions.
 export function Screen({
   width,
   height,
   fill = 1,
   follow,
+  full = false,
   className = "",
   children,
 }: {
@@ -135,6 +137,7 @@ export function Screen({
   height: number;
   fill?: number;
   follow?: RefObject<HTMLElement | null>;
+  full?: boolean;
   className?: string;
   children: ReactNode;
 }) {
@@ -167,8 +170,8 @@ export function Screen({
     };
   }, [width, height, fill, follow]);
   return (
-    // On desktop the right 38% is left free for the captions.
-    <div ref={box} className="absolute inset-x-0 top-16 bottom-2 overflow-hidden lg:right-[38%] lg:left-20">
+    // On desktop the right 38% is left free for the captions, unless the screen is `full`.
+    <div ref={box} className={`absolute inset-x-0 top-16 bottom-2 overflow-hidden ${full ? "" : "lg:right-[38%] lg:left-20"}`}>
       <div ref={inner} className={`absolute top-0 left-0 origin-top-left ${className}`} style={{ width, height }}>
         {children}
       </div>
@@ -194,18 +197,36 @@ export function Cursor({ ref }: { ref: Ref<HTMLDivElement> }) {
   );
 }
 
-// Step captions in large type: in the free right-hand column on desktop, over a scrim at the
-// bottom on phones. They share one grid cell; the reel fades each one in and out.
-export function Captions({ items }: { items: string[] }) {
-  const n = String(items.length).padStart(2, "0");
+// A step caption: a punchy headline and an optional line of detail.
+export type Caption = readonly [title: string, detail?: string];
+
+// Where captions sit on desktop: the right-hand column the screen leaves free ("side"), a narrower
+// strip beside a centred print ("edge"), or a glass card in the bottom-right corner of a full-size
+// demo ("corner"). On phones they always sit at the bottom over a scrim.
+const PLACES = {
+  side: "lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[38%] lg:content-center lg:pr-16 lg:pl-10",
+  edge: "lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[30%] lg:content-center lg:pr-14 lg:pl-2",
+  corner: "lg:top-auto lg:right-10 lg:bottom-10 lg:left-auto lg:w-[min(30rem,34%)] lg:p-0",
+};
+export type CaptionPlace = keyof typeof PLACES;
+
+// They share one grid cell; the reel fades each one in and out.
+export function Captions({ items, place = "side" }: { items: readonly Caption[]; place?: CaptionPlace }) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 grid bg-linear-to-t from-bg via-bg/75 to-transparent px-5 pt-28 pb-20 lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[38%] lg:content-center lg:bg-none lg:py-0 lg:pr-16 lg:pl-10">
-      {items.map((c, i) => (
-        <div key={c} data-caption className="invisible col-start-1 row-start-1">
-          <p className="font-mono text-xs tracking-[0.2em] text-accent-soft">
-            {String(i + 1).padStart(2, "0")} / {n}
+    <div
+      className={`pointer-events-none absolute inset-x-0 bottom-0 grid bg-linear-to-t from-bg via-bg/80 to-transparent px-5 pt-28 pb-20 lg:bg-none ${PLACES[place]}`}
+    >
+      {items.map(([title, detail]) => (
+        <div
+          key={title}
+          data-caption
+          className={`invisible col-start-1 row-start-1 ${place === "corner" ? "lg:rounded-2xl lg:border lg:border-line lg:bg-bg/70 lg:p-8 lg:backdrop-blur-md" : ""}`}
+        >
+          <span className="block h-1 w-12 rounded-full bg-accent shadow-[0_0_18px_rgb(79_125_255)]" aria-hidden="true" />
+          <p className="display mt-5 bg-linear-to-br from-white from-40% to-accent-soft bg-clip-text pb-1 text-[clamp(2.1rem,3.7vw,4.2rem)] text-balance text-transparent">
+            {title}
           </p>
-          <p className="mt-3 text-[clamp(1.6rem,3vw,3.3rem)] leading-[1.08] font-medium tracking-tight text-balance text-ink">{c}</p>
+          {detail && <p className="mt-4 max-w-sm text-base leading-relaxed text-ink/75 lg:text-lg">{detail}</p>}
         </div>
       ))}
     </div>

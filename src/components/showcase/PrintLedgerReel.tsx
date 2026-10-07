@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@/lib/gsap";
 import reel from "@/content/reels/printledger.json";
-import { Ambient, Captions, Cursor, Screen } from "./Showcase";
+import { Ambient, Captions, type Caption, Cursor, Screen } from "./Showcase";
 import { INTRO, caption, click, fadeIn, moveTo, reelTimeline } from "./engine";
 
 const [W, H] = reel.viewport;
@@ -11,13 +11,13 @@ const F = reel.frames;
 const T = reel.targets;
 const ORDER = ["empty", "weight", "time", "details", "logged", "ledgerView", "bills", "settings"] as const;
 
-const CAPTIONS = [
-  "Grams and hours in, a price out",
-  "Built from the shop's own filament, power and labour costs",
-  "Log the sale: revenue and profit update",
-  "Search, filter and sort every print in the ledger",
-  "Group finished prints into one bill",
-  "Set your own rates, currency and look",
+const CAPTIONS: Caption[] = [
+  ["Grams + hours", "Material and run time in, a price out"],
+  ["Your own costs", "Filament, power, labour and margin, set per shop"],
+  ["Log the sale", "Revenue and profit update straight away"],
+  ["The ledger", "Search, filter and sort every print"],
+  ["Bills", "Group finished prints into one bill"],
+  ["Settings", "Rates, currency and the app's look"],
 ];
 
 const centre = (k: keyof typeof T) => [T[k].x + T[k].w / 2, T[k].y + T[k].h / 2] as const;
@@ -76,7 +76,7 @@ export function PrintLedgerReel() {
   return (
     <div ref={root} className="absolute inset-0">
       <Ambient src={F.empty.src} />
-      <Screen width={W} height={H} follow={cursor} className="overflow-hidden rounded-xl shadow-[0_30px_120px_rgb(0_0_0/0.6)]">
+      <Screen width={W} height={H} follow={cursor} full className="overflow-hidden rounded-xl shadow-[0_30px_120px_rgb(0_0_0/0.6)]">
         {ORDER.map((id, i) => (
           // eslint-disable-next-line @next/next/no-img-element -- pre-sized captures, positioned in recording pixels
           <img
@@ -93,7 +93,7 @@ export function PrintLedgerReel() {
         ))}
         <Cursor ref={cursor} />
       </Screen>
-      <Captions items={CAPTIONS} />
+      <Captions items={CAPTIONS} place="corner" />
     </div>
   );
 }
