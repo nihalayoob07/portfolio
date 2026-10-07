@@ -41,14 +41,19 @@ function Model({ url, wireframe, explode, onReady }: { url: string; wireframe: b
   const parts = useMemo(() => {
     const list: Part[] = [];
     const whole = new THREE.Box3();
-    const boxes: THREE.Box3[] = [];
+    // A painted part arrives as one node with a mesh per colour; explode moves the node as a whole.
+    const groupOf: THREE.Object3D[] = [];
+    const groupBox = new Map<THREE.Object3D, THREE.Box3>();
     scene.updateMatrixWorld(true);
     scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
+      let node: THREE.Object3D = mesh;
+      while (node.parent && node.parent !== scene) node = node.parent;
       const box = new THREE.Box3().setFromObject(mesh);
       whole.union(box);
-      boxes.push(box);
+      groupOf.push(node);
+      groupBox.set(node, (groupBox.get(node) ?? new THREE.Box3()).union(box));
       const part: Part = {
         key: mesh.uuid,
         geometry: mesh.geometry,
@@ -69,15 +74,20 @@ function Model({ url, wireframe, explode, onReady }: { url: string; wireframe: b
       const v = b.getSize(new THREE.Vector3());
       return v.x * v.y * v.z;
     };
-    const base = boxes.indexOf(boxes.reduce((a, b) => (volume(b) > volume(a) ? b : a)));
-    const order = list
-      .map((_, i) => i)
-      .filter((i) => i !== base)
-      .sort((a, b) => boxes[a].getCenter(new THREE.Vector3()).y - boxes[b].getCenter(new THREE.Vector3()).y);
-    order.forEach((i, rank) => {
-      const c = boxes[i].getCenter(new THREE.Vector3());
-      list[i].away.set((c.x - centre.x) * 0.5, height * (0.6 + (0.5 * rank) / Math.max(1, order.length - 1)), (c.z - centre.z) * 0.5);
+    const groups = [...groupBox.keys()];
+    const base = groups.reduce((a, b) => (volume(groupBox.get(b)!) > volume(groupBox.get(a)!) ? b : a));
+    const order = groups
+      .filter((g) => g !== base)
+      .sort((a, b) => groupBox.get(a)!.getCenter(new THREE.Vector3()).y - groupBox.get(b)!.getCenter(new THREE.Vector3()).y);
+    const away = new Map<THREE.Object3D, THREE.Vector3>([[base, new THREE.Vector3()]]);
+    order.forEach((g, rank) => {
+      const c = groupBox.get(g)!.getCenter(new THREE.Vector3());
+      away.set(
+        g,
+        new THREE.Vector3((c.x - centre.x) * 0.5, height * (0.6 + (0.5 * rank) / Math.max(1, order.length - 1)), (c.z - centre.z) * 0.5),
+      );
     });
+    list.forEach((p, i) => p.away.copy(away.get(groupOf[i])!));
     return list;
   }, [scene]);
 

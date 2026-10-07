@@ -4,44 +4,19 @@
     "title": "Medicine box",
     "source": "~/Downloads/MEDBOX_COMPLETE.3mf",
     "assembly": "bambu",
-    "omit": [
-      "latch_catch_block",
-      "latch_insert"
-    ],
-    "include": [
-      "geometry_2"
-    ],
+    "omit": ["latch_catch_block", "latch_insert"],
+    "include": ["geometry_2"],
     "place": {
       "geometry_1": {
-        "rotate": [
-          180,
-          0,
-          0
-        ],
-        "center": [
-          0,
-          -2.5,
-          88.51
-        ]
+        "rotate": [180, 0, 0],
+        "center": [0, -2.5, 88.51]
       },
       "geometry_2": {
-        "center": [
-          0,
-          -81.25,
-          35.03
-        ]
+        "center": [0, -81.25, 35.03]
       },
       "handle_bail": {
-        "rotate": [
-          180,
-          0,
-          0
-        ],
-        "center": [
-          0,
-          21.49,
-          106.02
-        ]
+        "rotate": [180, 0, 0],
+        "center": [0, 21.49, 106.02]
       }
     },
     "colors": {
@@ -55,11 +30,7 @@
     "assembly": "bambu",
     "place": {
       "crystal better.stl": {
-        "center": [
-          90,
-          85.31,
-          6.97
-        ]
+        "center": [90, 85.31, 6.97]
       }
     }
   },
@@ -70,11 +41,7 @@
     "assembly": "bambu",
     "place": {
       "top.stl": {
-        "center": [
-          0,
-          0,
-          74.5
-        ]
+        "center": [0, 0, 74.5]
       }
     }
   },
@@ -82,6 +49,33 @@
     "slug": "cat-clicker",
     "title": "Cat clicker",
     "source": "~/Downloads/cat_clicker_noAMS_11.3mf",
-    "assembly": "plates"
+    "assembly": "manual",
+    "place": {
+      "box": {
+        "transform": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0]
+      },
+      "cat_body": {
+        "transform": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0.7]
+      },
+      "eye_0": {
+        "transform": [-0.2521, -0.46308, -0.84971, 2.8023, 0.96694, -0.15538, -0.20221, 1.9697, -0.03839, -0.87259, 0.48694, 5.5114]
+      },
+      "eye_1": {
+        "transform": [-0.95415, -0.18169, -0.23789, 2.0111, 0.29562, -0.44715, -0.84419, 2.6506, 0.04701, -0.87581, 0.48036, 5.5475]
+      },
+      "ear_2": {
+        "transform": [0.82874, 0.0169, -0.55938, 11.754, -0.55113, 0.1983, -0.81052, -1.2822, 0.09723, 0.98, 0.17365, 23.862]
+      },
+      "ear_3": {
+        "transform": [0.47712, 0.14354, -0.86703, -2.0579, -0.87752, 0.13168, -0.4611, 10.8846, 0.04799, 0.98085, 0.18879, 24.1219]
+      }
+    },
+    "extras": [
+      {
+        "kind": "mx-switch",
+        "name": "switch",
+        "at": [0.8, 1.13, -7.01]
+      }
+    ]
   }
 ]

@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { unzipSync, strFromU8 } from "fflate";
 import sharp from "sharp";
 import * as THREE from "three";
-import { mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
 import { Document, NodeIO } from "@gltf-transform/core";
 import { EXTMeshoptCompression, KHRMeshQuantization } from "@gltf-transform/extensions";
 import { meshopt } from "@gltf-transform/functions";
@@ -51,6 +51,16 @@ function matrixFrom(transform) {
   return m.set(v[0], v[3], v[6], v[9], v[1], v[4], v[7], v[10], v[2], v[5], v[8], v[11], 0, 0, 0, 1);
 }
 
+// Bambu's painted triangles: "4" = filament 1, "8" = filament 2, "<hex>C" = filament hex + 3.
+// Longer codes describe a subdivided triangle; those keep the part's own filament (0).
+function paintSlot(code) {
+  if (!code) return 0;
+  if (code === "4") return 1;
+  if (code === "8") return 2;
+  if (code.length === 2 && code[1] === "C") return parseInt(code[0], 16) + 3;
+  return 0;
+}
+
 function parseModelFile(xml) {
   const objects = new Map();
   for (const [, head, body] of xml.matchAll(/<object\b([^>]*)>([\s\S]*?)<\/object>/g)) {
@@ -59,8 +69,12 @@ function parseModelFile(xml) {
       const verts = [];
       for (const [, a] of body.matchAll(/<vertex\b([^>]*)\/>/g)) verts.push(+attr(a, "x"), +attr(a, "y"), +attr(a, "z"));
       const tris = [];
-      for (const [, a] of body.matchAll(/<triangle\b([^>]*)\/>/g)) tris.push(+attr(a, "v1"), +attr(a, "v2"), +attr(a, "v3"));
-      obj.mesh = { positions: new Float32Array(verts), indices: new Uint32Array(tris) };
+      const paint = [];
+      for (const [, a] of body.matchAll(/<triangle\b([^>]*)\/>/g)) {
+        tris.push(+attr(a, "v1"), +attr(a, "v2"), +attr(a, "v3"));
+        paint.push(paintSlot(attr(a, "paint_color")));
+      }
+      obj.mesh = { positions: new Float32Array(verts), indices: new Uint32Array(tris), paint: Uint8Array.from(paint) };
     }
     for (const [, a] of body.matchAll(/<component\b([^>]*)\/>/g)) {
       obj.components.push({ objectid: attr(a, "objectid"), path: attr(a, "p:path"), transform: attr(a, "transform") });
@@ -118,7 +132,7 @@ function load3mf(file, include = new Set()) {
         id: item.objectid,
         name: m.name || `part_${item.objectid}`,
         plate: plateOf.get(item.objectid) || 1,
-        color: filaments[(m.extruder || 1) - 1],
+        extruder: m.extruder || 1,
         printMatrix: matrixFrom(item.transform),
         assembly: m.instance ? { instance: m.instance, vols: m.vols } : null,
       };
@@ -128,6 +142,7 @@ function load3mf(file, include = new Set()) {
   const geometry = (objectid, root, volumeMatrix) => {
     const positions = [];
     const indices = [];
+    const slots = [];
     const v = new THREE.Vector3();
     const visit = (filePath, id, matrix, depth, k) => {
       const obj = files.get(filePath)?.objects.get(id);
@@ -140,6 +155,7 @@ function load3mf(file, include = new Set()) {
           positions.push(v.x, v.y, v.z);
         }
         for (const ix of obj.mesh.indices) indices.push(base + ix);
+        for (const s of obj.mesh.paint) slots.push(s);
       }
       obj.components.forEach((c, i) => {
         const own = matrixFrom(c.transform);
@@ -148,14 +164,14 @@ function load3mf(file, include = new Set()) {
       });
     };
     visit("/3D/3dmodel.model", objectid, root.clone(), 0, 0);
-    return { positions: new Float32Array(positions), indices: new Uint32Array(indices) };
+    return { positions: new Float32Array(positions), indices: new Uint32Array(indices), slots: Uint8Array.from(slots) };
   };
 
   // Use the most detailed plate render as the thumbnail.
   const thumbKey = Object.keys(zip)
     .filter((k) => /^Metadata\/plate_\d+\.png$/.test(k))
     .sort((a, b) => zip[b].length - zip[a].length)[0];
-  return { items, geometry, plates: new Set(items.map((i) => i.plate)).size, thumb: thumbKey ? zip[thumbKey] : null };
+  return { items, geometry, filaments, plates: new Set(items.map((i) => i.plate)).size, thumb: thumbKey ? zip[thumbKey] : null };
 }
 
 function bounds(positions) {
@@ -193,7 +209,47 @@ function layoutPlates(parts) {
     // Centre each plate inside its grid cell, resting on z = 0.
     const dx = col * (colWidth + PLATE_GAP) + (colWidth - (box.max.x - box.min.x)) / 2 - box.min.x;
     const dy = -row * (rowDepth + PLATE_GAP) - (rowDepth - (box.max.y - box.min.y)) / 2 - box.max.y;
-    for (const p of parts.filter((x) => x.plate === plate)) transform(p.positions, new THREE.Matrix4().makeTranslation(dx, dy, -box.min.z));
+    // Colour groups of one part share their positions array, so move each array once.
+    const arrays = new Set(parts.filter((x) => x.plate === plate).map((p) => p.positions));
+    for (const a of arrays) transform(a, new THREE.Matrix4().makeTranslation(dx, dy, -box.min.z));
+  });
+}
+
+// A 3x4 row-major [r00 r01 r02 tx, r10 ... tz] transform as a Matrix4.
+const matrix3x4 = (t) => new THREE.Matrix4().set(...t.slice(0, 4), ...t.slice(4, 8), ...t.slice(8, 12), 0, 0, 0, 1);
+
+// An MX-style keyboard switch, built from primitives. `at` is the plate line (where the top housing
+// meets the bottom housing), in the model's Z-up millimetres; returns one part per colour.
+function mxSwitch({ name = "switch", at, colors = {} }) {
+  const [x, y, z] = at;
+  const housing = colors.housing ?? "#2a2a31";
+  const top = colors.top ?? "#3a3a44";
+  const stem = colors.stem ?? "#d8433b";
+  const pins = colors.pins ?? "#c9a24a";
+  const zUp = (g) => g.rotateX(Math.PI / 2); // three's cylinders run along Y
+  const box = (w, d, h, cx, cy, cz) => new THREE.BoxGeometry(w, d, h).translate(cx, cy, cz);
+  const cyl = (r, h, cx, cy, cz, seg = 24) => zUp(new THREE.CylinderGeometry(r, r, h, seg)).translate(cx, cy, cz);
+  // Square frustum: a 4-sided cylinder turned 45 degrees so its faces line up with the axes.
+  const frustum = (bottom, topSide, h, cz) =>
+    zUp(new THREE.CylinderGeometry(topSide / Math.SQRT2, bottom / Math.SQRT2, h, 4, 1).rotateY(Math.PI / 4)).translate(x, y, cz);
+  const groups = [
+    [housing, [box(14, 14, 5, x, y, z - 2.5), cyl(2, 3.3, x, y, z - 6.65)]],
+    [top, [frustum(15.6, 11.6, 6.6, z + 3.3)]],
+    [stem, [box(4.1, 1.2, 5.5, x, y, z + 8.85), box(1.2, 4.1, 5.5, x, y, z + 8.85)]],
+    [pins, [cyl(0.75, 3.3, x - 3.81, y + 2.54, z - 6.65, 12), cyl(0.75, 3.3, x + 2.54, y + 5.08, z - 6.65, 12)]],
+  ];
+  return groups.map(([color, geoms]) => {
+    const g = mergeGeometries(
+      geoms.map((q) => q.toNonIndexed()),
+      false,
+    );
+    return {
+      name,
+      plate: 1,
+      color,
+      positions: new Float32Array(g.attributes.position.array),
+      indices: Uint32Array.from({ length: g.attributes.position.count }, (_, i) => i),
+    };
   });
 }
 
@@ -219,16 +275,24 @@ function simplify(part, ratio) {
 }
 
 async function convert(entry) {
-  const { items, geometry, plates, thumb } = load3mf(entry.source.replace(/^~(?=[/\\])/, os.homedir()), new Set(entry.include || []));
-  const assembled = entry.assembly === "bambu";
+  const { items, geometry, filaments, plates, thumb } = load3mf(
+    entry.source.replace(/^~(?=[/\\])/, os.homedir()),
+    new Set(entry.include || []),
+  );
+  const assembled = entry.assembly === "bambu" || entry.assembly === "manual";
   const omit = new Set(entry.omit || []);
+  // Filament colours, overridable per slot ("slotColors": {"4": "#hex"}).
+  const slotColor = (slot) => entry.slotColors?.[slot] ?? filaments[slot - 1];
 
   const parts = [];
   for (const item of items) {
     if (omit.has(item.name)) continue;
     const override = entry.place?.[item.name];
     let g;
-    if (!assembled || override) {
+    if (override?.transform) {
+      // An exact rigid transform from the part's own mesh coordinates.
+      g = geometry(item.id, matrix3x4(override.transform), () => new THREE.Matrix4());
+    } else if (!assembled || override) {
       g = geometry(item.id, item.printMatrix, (_k, own) => own);
       if (override) place(g.positions, override);
     } else if (item.assembly) {
@@ -238,7 +302,20 @@ async function convert(entry) {
       continue;
     }
     if (!g.indices.length) continue;
-    parts.push({ name: item.name, plate: item.plate, color: entry.colors?.[item.name] ?? item.color ?? FALLBACK_COLOR, ...g });
+    // Split painted triangles into one group per colour; a "colors" entry repaints the whole part.
+    const whole = entry.colors?.[item.name];
+    const own = whole ?? slotColor(item.extruder) ?? FALLBACK_COLOR;
+    const byColor = new Map();
+    for (let t = 0; t < g.indices.length / 3; t++) {
+      const color = !whole && g.slots[t] ? (slotColor(g.slots[t]) ?? own) : own;
+      if (!byColor.has(color)) byColor.set(color, []);
+      byColor.get(color).push(g.indices[3 * t], g.indices[3 * t + 1], g.indices[3 * t + 2]);
+    }
+    for (const [color, idx] of byColor)
+      parts.push({ name: item.name, plate: item.plate, color, positions: g.positions, indices: Uint32Array.from(idx) });
+  }
+  for (const extra of entry.extras || []) {
+    if (extra.kind === "mx-switch") parts.push(...mxSwitch(extra));
   }
   if (!assembled) layoutPlates(parts);
 
@@ -267,6 +344,7 @@ async function convert(entry) {
   const buffer = doc.createBuffer();
   const scene = doc.createScene(entry.slug);
   const materials = new Map();
+  const meshes = new Map(); // one node per part, one primitive per colour
   let displayTriangles = 0;
   for (const p of parts) {
     const src = p.positions;
@@ -296,7 +374,12 @@ async function convert(entry) {
       .setAttribute("POSITION", doc.createAccessor().setType("VEC3").setArray(geom.attributes.position.array).setBuffer(buffer))
       .setAttribute("NORMAL", doc.createAccessor().setType("VEC3").setArray(geom.attributes.normal.array).setBuffer(buffer))
       .setIndices(doc.createAccessor().setType("SCALAR").setArray(new Uint32Array(geom.index.array)).setBuffer(buffer));
-    scene.addChild(doc.createNode(p.name).setMesh(doc.createMesh(p.name).addPrimitive(prim)));
+    if (!meshes.has(p.name)) {
+      const mesh = doc.createMesh(p.name);
+      meshes.set(p.name, mesh);
+      scene.addChild(doc.createNode(p.name).setMesh(mesh));
+    }
+    meshes.get(p.name).addPrimitive(prim);
   }
 
   await doc.transform(meshopt({ encoder: MeshoptEncoder, level: "medium" }));
@@ -320,7 +403,7 @@ async function convert(entry) {
     glb: `/models/${entry.slug}.glb`,
     thumb: thumb ? `/models/${entry.slug}.webp` : null,
     assembled,
-    parts: parts.length,
+    parts: meshes.size,
     plates,
     sourceTriangles,
     displayTriangles,

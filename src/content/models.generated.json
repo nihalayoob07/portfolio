@@ -55,16 +55,16 @@
     "title": "Cat clicker",
     "glb": "/models/cat-clicker.glb",
     "thumb": "/models/cat-clicker.webp",
-    "assembled": false,
-    "parts": 6,
+    "assembled": true,
+    "parts": 7,
     "plates": 1,
-    "sourceTriangles": 592946,
-    "displayTriangles": 160000,
+    "sourceTriangles": 593190,
+    "displayTriangles": 159999,
     "size": [
-      99.8,
-      61.8,
-      28.6
+      45,
+      45,
+      45.7
     ],
-    "bytes": 967540
+    "bytes": 1014584
   }
 ]
