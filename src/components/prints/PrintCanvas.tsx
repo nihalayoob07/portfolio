@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Lightformer, useGLTF } from "@react-three/drei";
+import { Environment, Lightformer, useGLTF, useProgress } from "@react-three/drei";
 import { EffectComposer, N8AO, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import type { ModelEntry } from "@/content/models";
@@ -22,6 +22,8 @@ export type PrintCanvasProps = {
   // Frame the print left of centre, leaving the right of the screen to captions (desktop only).
   aside: boolean;
   onReady: () => void;
+  // Download progress of the model, 0–100.
+  onProgress: (p: number) => void;
 };
 
 // Camera and moving parts for each print, as a function of scroll progress.
@@ -136,7 +138,7 @@ function usePieces(url: string) {
   }, [scene]);
 }
 
-function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasProps, "running">) {
+function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasProps, "running" | "onProgress">) {
   const { pieces, box } = usePieces(model.glb);
   const lid = useRef<THREE.Group>(null);
   const pressed = useRef<THREE.Group>(null);
@@ -400,7 +402,13 @@ function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vecto
   );
 }
 
-export default function PrintCanvas({ model, progress, clickedAt, running, aside, onReady }: PrintCanvasProps) {
+function ReportProgress({ onProgress }: { onProgress: (p: number) => void }) {
+  const { progress } = useProgress();
+  useEffect(() => onProgress(progress), [progress, onProgress]);
+  return null;
+}
+
+export default function PrintCanvas({ model, progress, clickedAt, running, aside, onReady, onProgress }: PrintCanvasProps) {
   return (
     <Canvas
       shadows="percentage"
@@ -411,6 +419,7 @@ export default function PrintCanvas({ model, progress, clickedAt, running, aside
     >
       <color attach="background" args={[BG]} />
       <fog attach="fog" args={[BG, 1000, 4000]} />
+      <ReportProgress onProgress={onProgress} />
       <Suspense fallback={null}>
         <Print model={model} progress={progress} clickedAt={clickedAt} aside={aside} onReady={onReady} />
       </Suspense>

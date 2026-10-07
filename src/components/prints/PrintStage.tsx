@@ -6,6 +6,7 @@ import { MousePointerClick } from "lucide-react";
 import { useGSAP } from "@/lib/gsap";
 import { keyClick } from "@/lib/sfx";
 import { SoundToggle } from "../SoundToggle";
+import { PrintLoader } from "./PrintLoader";
 import type { ModelEntry } from "@/content/models";
 import { Captions, useShowcase, type Caption, type CaptionPlace } from "../showcase/Showcase";
 import { caption, reelTimeline } from "../showcase/engine";
@@ -71,6 +72,7 @@ export function PrintStage({ model }: { model: ModelEntry }) {
   const clickedAt = useRef(-1e9);
   const [ready, setReady] = useState(false);
   const onReady = useCallback(() => setReady(true), []);
+  const [loaded, setLoaded] = useState(0);
   const { onScreen } = useShowcase();
   const clicker = model.slug === "cat-clicker";
   const stage = STAGES[model.slug] ?? { captions: [] };
@@ -119,14 +121,20 @@ export function PrintStage({ model }: { model: ModelEntry }) {
           : undefined
       }
     >
-      <PrintCanvas model={model} progress={progress} clickedAt={clickedAt} running={onScreen} aside={!!stage.aside} onReady={onReady} />
-      {!ready && (
-        <p className="absolute inset-x-0 top-1/2 text-center font-mono text-xs tracking-widest text-ink/50 uppercase">Loading model</p>
-      )}
+      <PrintCanvas
+        model={model}
+        progress={progress}
+        clickedAt={clickedAt}
+        running={onScreen}
+        aside={!!stage.aside}
+        onReady={onReady}
+        onProgress={setLoaded}
+      />
+      <PrintLoader model={model} progress={loaded} done={ready} />
       {clicker && (
         <>
           <div ref={sfx} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
-          <div className="absolute top-22 right-5 flex flex-col items-end gap-3 md:right-8">
+          <div data-own-sfx className="absolute top-22 right-5 flex flex-col items-end gap-3 md:right-8">
             <button
               type="button"
               onClick={click}

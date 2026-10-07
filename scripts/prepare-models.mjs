@@ -439,6 +439,7 @@ async function convert(entry) {
 
   if (thumb)
     await sharp(Buffer.from(thumb))
+      .trim()
       .resize(320, 320, { fit: "inside" })
       .webp({ quality: 82 })
       .toFile(path.join(OUT_DIR, `${entry.slug}.webp`));

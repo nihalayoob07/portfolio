@@ -94,6 +94,8 @@ const tag = (page, name, text, scope = "body") =>
 
 async function printvault(page) {
   const rec = recorder(page, "printvault");
+  // Still frames: reduced motion stops the hero's rotating word (and other loops) mid-change.
+  await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
   const go = async (url) => {
     await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
     // Scroll through once so lazy sections and images load, then back to the top.

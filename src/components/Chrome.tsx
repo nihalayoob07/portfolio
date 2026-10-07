@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Menu, X, FileText } from "lucide-react";
 import { site } from "@/content/site";
 import { SocialIcon } from "./icons";
+import { SoundToggle } from "./SoundToggle";
 
 function RollText({ children }: { children: string }) {
   return (
@@ -47,17 +48,21 @@ export function Chrome() {
                 <RollText>{item.label}</RollText>
               </a>
             ))}
+            <SoundToggle variant="nav" className="uppercase" />
           </nav>
-          <button
-            type="button"
-            className="-mr-2 p-2 md:hidden"
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            aria-controls="mobile-menu"
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
+          <div className="-mr-2 flex items-center gap-1 md:hidden">
+            <SoundToggle variant="nav" className="p-2" />
+            <button
+              type="button"
+              className="p-2"
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              aria-controls="mobile-menu"
+              onClick={() => setOpen((v) => !v)}
+            >
+              {open ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          </div>
         </div>
       </header>
 

@@ -7,9 +7,23 @@ import { sound } from "@/lib/sfx";
 const LABEL = { locked: "Tap for sound", on: "Sound on", muted: "Sound off" };
 
 // Turns the page's sound effects on and off (the first tap also unlocks audio in the browser).
-export function SoundToggle({ className = "" }: { className?: string }) {
+// "pill" sits in a panel; "nav" matches the header links.
+export function SoundToggle({ variant = "pill", className = "" }: { variant?: "pill" | "nav"; className?: string }) {
   const state = useSyncExternalStore(sound.subscribe, sound.state, () => "locked" as const);
   const Icon = state === "on" ? Volume2 : VolumeX;
+  if (variant === "nav")
+    return (
+      <button
+        type="button"
+        onClick={sound.toggle}
+        aria-pressed={state === "on"}
+        aria-label={LABEL[state]}
+        className={`flex items-center gap-1.5 hover:text-accent-soft ${state === "on" ? "" : "text-ink/60"} ${className}`}
+      >
+        <Icon className="size-4" aria-hidden="true" />
+        <span className="hidden md:inline">Sound</span>
+      </button>
+    );
   return (
     <button
       type="button"

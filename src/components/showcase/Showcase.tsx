@@ -3,6 +3,7 @@
 import { createContext, use, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref, type RefObject } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { gsap } from "@/lib/gsap";
+import { whoosh } from "@/lib/sfx";
 
 type Link = { label: string; href: string };
 
@@ -43,7 +44,13 @@ export function Showcase({
     const el = article.current!;
     // Mount the reel a screen ahead and drop it once well past, so only nearby panels hold images or WebGL.
     const nearObs = new IntersectionObserver(([e]) => setNear(e.isIntersecting), { rootMargin: "100% 0px" });
-    const seenObs = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting));
+    // A whoosh as the panel starts wiping in (not for the observer's first report on load).
+    let first = true;
+    const seenObs = new IntersectionObserver(([e]) => {
+      setOnScreen(e.isIntersecting);
+      if (e.isIntersecting && !first) whoosh();
+      first = false;
+    });
     nearObs.observe(el);
     seenObs.observe(el);
     return () => {

@@ -291,3 +291,16 @@ html.lenis body {
     opacity: 0;
   }
 }
+
+/* 3D print loader: the hotend sweeping along the layer being printed. */
+.print-nozzle {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  animation: nozzle-sweep 0.9s ease-in-out infinite alternate;
+}
+@keyframes nozzle-sweep {
+  to {
+    left: calc(100% - 14px);
+  }
+}
