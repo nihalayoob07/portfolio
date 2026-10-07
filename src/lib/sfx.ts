@@ -125,33 +125,6 @@ export function alarm(on: boolean) {
   alarmTimer = window.setInterval(ring, 1000);
 }
 
-// A short filtered noise burst plus a falling "thock" for the switch body.
-function tick(t: number, freq: number, level: number, length: number) {
-  const c = ctx!;
-  const src = c.createBufferSource();
-  src.buffer = noise;
-  const bp = c.createBiquadFilter();
-  bp.type = "bandpass";
-  bp.frequency.value = freq * (0.9 + Math.random() * 0.2);
-  bp.Q.value = 2.2;
-  const g = c.createGain();
-  g.gain.setValueAtTime(level, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + length);
-  src.connect(bp).connect(g).connect(master!);
-  src.start(t);
-  src.stop(t + length + 0.01);
-
-  const body = c.createOscillator();
-  body.frequency.setValueAtTime(240 + Math.random() * 40, t);
-  body.frequency.exponentialRampToValueAtTime(90, t + 0.04);
-  const bg = c.createGain();
-  bg.gain.setValueAtTime(level * 0.5, t);
-  bg.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-  body.connect(bg).connect(master!);
-  body.start(t);
-  body.stop(t + 0.06);
-}
-
 // A mechanical key: the press, then a lighter click as it springs back.
 // A filtered noise burst: the snap of plastic on plastic.
 function snap(t: number, type: BiquadFilterType, freq: number, q: number, level: number, length: number) {
