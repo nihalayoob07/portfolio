@@ -2,21 +2,37 @@
   {
     "slug": "medbox",
     "title": "Medicine box",
-    "source": "~/Downloads/MEDBOX_COMPLETE.3mf"
+    "source": "~/Downloads/MEDBOX_COMPLETE.3mf",
+    "assembly": "bambu",
+    "omit": [
+      "handle_bail"
+    ]
   },
   {
     "slug": "z-ring",
     "title": "Z-ring",
-    "source": "~/OneDrive/Documents/3djob/z ring/final.3mf"
+    "source": "~/OneDrive/Documents/3djob/z ring/final.3mf",
+    "assembly": "plates"
   },
   {
     "slug": "tissue-box",
     "title": "Ribbed tissue box",
-    "source": "~/OneDrive/Documents/3djob/tissuebox/ribbedtissueboxfinal.3mf"
+    "source": "~/OneDrive/Documents/3djob/tissuebox/ribbedtissueboxfinal.3mf",
+    "assembly": "bambu",
+    "place": {
+      "top.stl": {
+        "center": [
+          0,
+          0,
+          74.5
+        ]
+      }
+    }
   },
   {
     "slug": "cat-clicker",
     "title": "Cat clicker",
-    "source": "~/Downloads/cat_clicker_noAMS_11.3mf"
+    "source": "~/Downloads/cat_clicker_noAMS_11.3mf",
+    "assembly": "plates"
   }
 ]

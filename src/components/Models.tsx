@@ -17,14 +17,6 @@ function ViewerPlaceholder() {
   );
 }
 
-const SWATCHES = [
-  { name: "Jade white", hex: "#e8e5dd" },
-  { name: "Charcoal", hex: "#3b3b44" },
-  { name: "Cobalt", hex: "#4f7dff" },
-  { name: "Signal orange", hex: "#ff6a2b" },
-  { name: "Mint", hex: "#3ad6a0" },
-];
-
 const fmt = new Intl.NumberFormat("en-US");
 const mm = (n: number) => `${Math.round(n)}`;
 
@@ -32,7 +24,7 @@ export function Models() {
   const root = useRef<HTMLElement>(null);
   const viewer = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
-  const [color, setColor] = useState(SWATCHES[0].hex);
+  const [explode, setExplode] = useState(0);
   const [wireframe, setWireframe] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const [near, setNear] = useState(false);
@@ -73,7 +65,7 @@ export function Models() {
     { scope: root },
   );
 
-  const [w, d, h] = model.mainPart.size;
+  const [w, d, h] = model.size;
   // On touch screens pinch-zoom is harmless; with a mouse, wheel-zoom waits for a click so page scrolling isn't hijacked.
   const zoomOn = coarse || zoom;
 
@@ -103,9 +95,9 @@ export function Models() {
             {near ? (
               <ModelCanvas
                 url={model.glb}
-                size={model.layoutSize}
-                color={color}
+                size={model.size}
                 wireframe={wireframe}
+                explode={explode}
                 zoom={zoomOn}
                 running={onScreen}
                 resetKey={resetKey}
@@ -124,20 +116,21 @@ export function Models() {
 
             <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-3 p-4 md:p-5">
               <p className="pointer-events-none font-mono text-[11px] tracking-wider text-ink/60 uppercase">
-                Main part {mm(w)} × {mm(d)} × {mm(h)} mm
+                {model.assembled ? "Assembled" : "Print layout"} · {mm(w)} × {mm(d)} × {mm(h)} mm
               </p>
-              <div className="flex items-center gap-2 rounded-full border border-line bg-bg/70 p-1.5 backdrop-blur">
-                {SWATCHES.map((s) => (
-                  <button
-                    key={s.hex}
-                    type="button"
-                    aria-label={`${s.name} filament`}
-                    aria-pressed={color === s.hex}
-                    onClick={() => setColor(s.hex)}
-                    className={`size-6 rounded-full border-2 transition ${color === s.hex ? "border-ink" : "border-transparent hover:border-ink/40"}`}
-                    style={{ background: s.hex }}
+              <div className="flex items-center gap-2 rounded-full border border-line bg-bg/70 py-1.5 pr-1.5 pl-4 backdrop-blur">
+                <label className="flex items-center gap-3 font-mono text-[11px] tracking-wider text-ink/70 uppercase">
+                  Explode
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={explode}
+                    onChange={(e) => setExplode(Number(e.target.value))}
+                    className="w-24 accent-accent sm:w-32"
                   />
-                ))}
+                </label>
                 <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
                 <button
                   type="button"
@@ -166,7 +159,10 @@ export function Models() {
                   <button
                     type="button"
                     aria-pressed={i === active}
-                    onClick={() => setActive(i)}
+                    onClick={() => {
+                      setActive(i);
+                      setExplode(0);
+                    }}
                     className={`flex w-full items-center gap-3 rounded-xl border p-2 text-left transition ${
                       i === active ? "border-accent bg-accent/[0.06]" : "border-line hover:border-ink/25"
                     }`}
@@ -199,7 +195,7 @@ export function Models() {
                   <dd className="font-medium">{model.plates}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted">Main part</dt>
+                  <dt className="text-muted">{model.assembled ? "Assembled size" : "Print layout"}</dt>
                   <dd className="font-medium">
                     {mm(w)} × {mm(d)} × {mm(h)} mm
                   </dd>

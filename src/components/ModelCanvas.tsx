@@ -9,8 +9,9 @@ export type ModelCanvasProps = {
   url: string;
   // Footprint in millimetres, Z-up as exported: [x, y, z].
   size: number[];
-  color: string;
   wireframe: boolean;
+  // 0 = assembled, 1 = parts pulled apart.
+  explode: number;
   zoom: boolean;
   running: boolean;
   resetKey: number;
@@ -18,31 +19,64 @@ export type ModelCanvasProps = {
   preload: string[];
 };
 
-type Part = { key: string; geometry: THREE.BufferGeometry; position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 };
+type Part = {
+  key: string;
+  geometry: THREE.BufferGeometry;
+  color: THREE.Color;
+  position: THREE.Vector3;
+  quaternion: THREE.Quaternion;
+  scale: THREE.Vector3;
+  // Where this part goes when fully exploded, relative to its assembled position.
+  away: THREE.Vector3;
+};
 
-function Model({ url, color, wireframe, onReady }: { url: string; color: string; wireframe: boolean; onReady: (url: string) => void }) {
+function Model({ url, wireframe, explode, onReady }: { url: string; wireframe: boolean; explode: number; onReady: (url: string) => void }) {
   const { scene } = useGLTF(url, false, true);
 
   // Mounting means Suspense has resolved, so this model is on screen.
   useEffect(() => onReady(url), [onReady, url]);
 
-  // Re-render each part with our own filament material, keeping its world transform
+  // Re-render each part with its filament colour, keeping its world transform
   // (which carries the dequantisation scale from the meshopt export).
   const parts = useMemo(() => {
     const list: Part[] = [];
+    const whole = new THREE.Box3();
+    const boxes: THREE.Box3[] = [];
     scene.updateMatrixWorld(true);
     scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh) return;
+      const box = new THREE.Box3().setFromObject(mesh);
+      whole.union(box);
+      boxes.push(box);
       const part: Part = {
         key: mesh.uuid,
         geometry: mesh.geometry,
+        color: (mesh.material as THREE.MeshStandardMaterial).color.clone(),
         position: new THREE.Vector3(),
         quaternion: new THREE.Quaternion(),
         scale: new THREE.Vector3(),
+        away: new THREE.Vector3(),
       };
       mesh.matrixWorld.decompose(part.position, part.quaternion, part.scale);
       list.push(part);
+    });
+    // Exploded view: the biggest part stays put as the base, the rest rise above it in height order,
+    // spreading out a little sideways so they don't hide each other.
+    const centre = whole.getCenter(new THREE.Vector3());
+    const height = whole.max.y - whole.min.y;
+    const volume = (b: THREE.Box3) => {
+      const v = b.getSize(new THREE.Vector3());
+      return v.x * v.y * v.z;
+    };
+    const base = boxes.indexOf(boxes.reduce((a, b) => (volume(b) > volume(a) ? b : a)));
+    const order = list
+      .map((_, i) => i)
+      .filter((i) => i !== base)
+      .sort((a, b) => boxes[a].getCenter(new THREE.Vector3()).y - boxes[b].getCenter(new THREE.Vector3()).y);
+    order.forEach((i, rank) => {
+      const c = boxes[i].getCenter(new THREE.Vector3());
+      list[i].away.set((c.x - centre.x) * 0.5, height * (0.6 + (0.5 * rank) / Math.max(1, order.length - 1)), (c.z - centre.z) * 0.5);
     });
     return list;
   }, [scene]);
@@ -50,8 +84,14 @@ function Model({ url, color, wireframe, onReady }: { url: string; color: string;
   return (
     <group>
       {parts.map((p) => (
-        <mesh key={p.key} geometry={p.geometry} position={p.position} quaternion={p.quaternion} scale={p.scale}>
-          <meshStandardMaterial color={color} wireframe={wireframe} roughness={0.58} metalness={0.02} />
+        <mesh
+          key={p.key}
+          geometry={p.geometry}
+          position={p.position.clone().addScaledVector(p.away, explode)}
+          quaternion={p.quaternion}
+          scale={p.scale}
+        >
+          <meshStandardMaterial color={p.color} wireframe={wireframe} roughness={0.6} metalness={0} />
         </mesh>
       ))}
     </group>
@@ -80,7 +120,7 @@ function Fit({ url, resetKey }: { url: string; resetKey: number }) {
   return null;
 }
 
-export default function ModelCanvas({ url, size, color, wireframe, zoom, running, resetKey, preload }: ModelCanvasProps) {
+export default function ModelCanvas({ url, size, wireframe, explode, zoom, running, resetKey, preload }: ModelCanvasProps) {
   const [spinning, setSpinning] = useState(true);
   const [readyUrl, setReadyUrl] = useState<string | null>(null);
   const resume = useRef<number | undefined>(undefined);
@@ -107,7 +147,7 @@ export default function ModelCanvas({ url, size, color, wireframe, zoom, running
 
         <Suspense fallback={null}>
           <Bounds key={url} fit clip margin={1.18} maxDuration={0.8}>
-            <Model url={url} color={color} wireframe={wireframe} onReady={setReadyUrl} />
+            <Model url={url} wireframe={wireframe} explode={explode} onReady={setReadyUrl} />
             <Fit url={url} resetKey={resetKey} />
           </Bounds>
           <ContactShadows

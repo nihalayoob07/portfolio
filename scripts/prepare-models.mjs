@@ -1,10 +1,15 @@
 // Converts the Bambu Studio .3mf projects listed in models.config.json into
 // compact GLBs for the 3D viewer, plus a thumbnail and stats per model.
 //
-//   node scripts/prepare-models.mjs
+//   node scripts/prepare-models.mjs [--debug]
 //
-// Each print plate keeps its own part layout; plates are then laid out in a
-// grid so the whole kit is visible at once. Units stay in millimetres.
+// Each entry picks a layout:
+//   "assembly": "bambu"  - parts where Bambu Studio's assembly view puts them
+//                          (Metadata/model_settings.config <assemble_item>), with
+//                          "place" overrides for parts it has no position for
+//   "assembly": "plates" - every print plate as laid out for printing, plates in a grid
+// Part colours come from each object's filament in the project, unless "colors"
+// overrides them. Units stay in millimetres.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -24,6 +29,8 @@ const STATS_FILE = path.join(ROOT, "src", "content", "models.generated.json");
 const TRIANGLE_BUDGET = 160_000;
 const CREASE_ANGLE = THREE.MathUtils.degToRad(32);
 const PLATE_GAP = 18;
+const FALLBACK_COLOR = "#e8e5dd";
+const DEBUG = process.argv.includes("--debug");
 
 const config = JSON.parse(fs.readFileSync(path.join(ROOT, "scripts", "models.config.json"), "utf8"));
 await MeshoptSimplifier.ready;
@@ -46,8 +53,7 @@ function matrixFrom(transform) {
 function parseModelFile(xml) {
   const objects = new Map();
   for (const [, head, body] of xml.matchAll(/<object\b([^>]*)>([\s\S]*?)<\/object>/g)) {
-    const id = attr(head, "id");
-    const obj = { id, mesh: null, components: [] };
+    const obj = { mesh: null, components: [] };
     if (body.includes("<mesh")) {
       const verts = [];
       for (const [, a] of body.matchAll(/<vertex\b([^>]*)\/>/g)) verts.push(+attr(a, "x"), +attr(a, "y"), +attr(a, "z"));
@@ -58,12 +64,9 @@ function parseModelFile(xml) {
     for (const [, a] of body.matchAll(/<component\b([^>]*)\/>/g)) {
       obj.components.push({ objectid: attr(a, "objectid"), path: attr(a, "p:path"), transform: attr(a, "transform") });
     }
-    objects.set(id, obj);
+    objects.set(attr(head, "id"), obj);
   }
-  const items = [...xml.matchAll(/<item\b([^>]*)\/>/g)].map(([, a]) => ({
-    objectid: attr(a, "objectid"),
-    transform: attr(a, "transform"),
-  }));
+  const items = [...xml.matchAll(/<item\b([^>]*)\/>/g)].map(([, a]) => ({ objectid: attr(a, "objectid"), transform: attr(a, "transform") }));
   return { objects, items };
 }
 
@@ -74,55 +77,80 @@ function load3mf(file) {
   const main = files.get("/3D/3dmodel.model");
   if (!main) throw new Error(`${file}: no 3D/3dmodel.model`);
 
-  // Object names and plate membership from Bambu's settings, when present.
-  const names = new Map();
+  // Names, filament slots, plates and assembly positions from Bambu's settings, when present.
+  const meta = new Map();
+  const info = (id) => meta.get(id) ?? meta.set(id, { vols: new Map() }).get(id);
   const plateOf = new Map();
-  const settings = zip["Metadata/model_settings.config"] && strFromU8(zip["Metadata/model_settings.config"]);
-  if (settings) {
-    for (const [, id, name] of settings.matchAll(/<object id="(\d+)">\s*<metadata key="name" value="([^"]*)"/g)) names.set(id, name);
-    for (const [, body] of settings.matchAll(/<plate>([\s\S]*?)<\/plate>/g)) {
-      const plate = +(body.match(/plater_id" value="(\d+)"/) || [])[1] || 1;
-      for (const [, id] of body.matchAll(/object_id" value="(\d+)"/g)) plateOf.set(id, plate);
-    }
+  const settings = zip["Metadata/model_settings.config"] ? strFromU8(zip["Metadata/model_settings.config"]) : "";
+  for (const [, id, body] of settings.matchAll(/<object id="(\d+)">([\s\S]*?)<\/object>/g)) {
+    info(id).name = (body.match(/key="name" value="([^"]*)"/) || [])[1];
+    info(id).extruder = +((body.match(/key="extruder" value="(\d+)"/) || [])[1] || 1);
+  }
+  for (const [, body] of settings.matchAll(/<plate>([\s\S]*?)<\/plate>/g)) {
+    const plate = +(body.match(/plater_id" value="(\d+)"/) || [])[1] || 1;
+    for (const [, id] of body.matchAll(/object_id" value="(\d+)"/g)) plateOf.set(id, plate);
+  }
+  for (const [, a] of settings.matchAll(/<assemble_item\b([^>]*)\/>/g)) {
+    const o = info(attr(a, "object_id"));
+    if (attr(a, "instance_id") === "0") o.instance = matrixFrom(attr(a, "transform"));
+    else if (attr(a, "volume_id") !== undefined) o.vols.set(+attr(a, "volume_id"), matrixFrom(attr(a, "transform")));
   }
 
-  // Flatten every build item into one part with world-space positions.
-  const parts = [];
-  for (const item of main.items) {
-    // Objects left beside the plates in Bambu Studio aren't part of the print.
-    if (plateOf.size && !plateOf.has(item.objectid)) continue;
+  let filaments = [];
+  try {
+    const project = JSON.parse(strFromU8(zip["Metadata/project_settings.config"]));
+    filaments = (project.filament_colour || []).map((c) => c.slice(0, 7));
+  } catch {
+    /* not a Bambu project: parts fall back to the default colour */
+  }
+
+  // One entry per build item; geometry is built later once the layout is known.
+  const items = main.items
+    .filter((item) => !plateOf.size || plateOf.has(item.objectid)) // objects left beside the plates aren't printed
+    .map((item) => {
+      const m = meta.get(item.objectid) ?? { vols: new Map() };
+      return {
+        id: item.objectid,
+        name: m.name || `part_${item.objectid}`,
+        plate: plateOf.get(item.objectid) || 1,
+        color: filaments[(m.extruder || 1) - 1],
+        printMatrix: matrixFrom(item.transform),
+        assembly: m.instance ? { instance: m.instance, vols: m.vols } : null,
+      };
+    });
+
+  // Flattens an object into positions/indices; volumeMatrix(k, componentMatrix) picks each top-level part's transform.
+  const geometry = (objectid, root, volumeMatrix) => {
     const positions = [];
     const indices = [];
-    const visit = (filePath, id, matrix) => {
+    const v = new THREE.Vector3();
+    const visit = (filePath, id, matrix, depth, k) => {
       const obj = files.get(filePath)?.objects.get(id);
       if (!obj) throw new Error(`${file}: missing object ${filePath}#${id}`);
       if (obj.mesh) {
         const base = positions.length / 3;
         const p = obj.mesh.positions;
-        const v = new THREE.Vector3();
         for (let i = 0; i < p.length; i += 3) {
           v.set(p[i], p[i + 1], p[i + 2]).applyMatrix4(matrix);
           positions.push(v.x, v.y, v.z);
         }
         for (const ix of obj.mesh.indices) indices.push(base + ix);
       }
-      for (const c of obj.components) visit(c.path || filePath, c.objectid, matrix.clone().multiply(matrixFrom(c.transform)));
+      obj.components.forEach((c, i) => {
+        const own = matrixFrom(c.transform);
+        const local = depth === 0 ? volumeMatrix(i, own) : own;
+        visit(c.path || filePath, c.objectid, matrix.clone().multiply(local), depth + 1, depth === 0 ? i : k);
+      });
     };
-    visit("/3D/3dmodel.model", item.objectid, matrixFrom(item.transform));
-    if (!indices.length) continue;
-    parts.push({
-      name: names.get(item.objectid) || `part_${item.objectid}`,
-      plate: plateOf.get(item.objectid) || 1,
-      positions: new Float32Array(positions),
-      indices: new Uint32Array(indices),
-    });
-  }
+    visit("/3D/3dmodel.model", objectid, root.clone(), 0, 0);
+    return { positions: new Float32Array(positions), indices: new Uint32Array(indices) };
+  };
 
   // Use the most detailed plate render as the thumbnail.
   const thumbKey = Object.keys(zip)
     .filter((k) => /^Metadata\/plate_\d+\.png$/.test(k))
     .sort((a, b) => zip[b].length - zip[a].length)[0];
-  return { parts, thumb: thumbKey ? zip[thumbKey] : null };
+  return { items, geometry, plates: new Set(items.map((i) => i.plate)).size, thumb: thumbKey ? zip[thumbKey] : null };
 }
 
 function bounds(positions) {
@@ -132,11 +160,13 @@ function bounds(positions) {
   return b;
 }
 
-function translate(positions, dx, dy, dz) {
+function transform(positions, matrix) {
+  const v = new THREE.Vector3();
   for (let i = 0; i < positions.length; i += 3) {
-    positions[i] += dx;
-    positions[i + 1] += dy;
-    positions[i + 2] += dz;
+    v.set(positions[i], positions[i + 1], positions[i + 2]).applyMatrix4(matrix);
+    positions[i] = v.x;
+    positions[i + 1] = v.y;
+    positions[i + 2] = v.z;
   }
 }
 
@@ -158,9 +188,16 @@ function layoutPlates(parts) {
     // Centre each plate inside its grid cell, resting on z = 0.
     const dx = col * (colWidth + PLATE_GAP) + (colWidth - (box.max.x - box.min.x)) / 2 - box.min.x;
     const dy = -row * (rowDepth + PLATE_GAP) - (rowDepth - (box.max.y - box.min.y)) / 2 - box.max.y;
-    for (const p of parts.filter((x) => x.plate === plate)) translate(p.positions, dx, dy, -box.min.z);
+    for (const p of parts.filter((x) => x.plate === plate)) transform(p.positions, new THREE.Matrix4().makeTranslation(dx, dy, -box.min.z));
   });
-  return plates.length;
+}
+
+// Puts a part from its print position to a hand-placed one: rotate about its own centre, then move that centre.
+function place(positions, { rotate = [0, 0, 0], center }) {
+  const c = bounds(positions).getCenter(new THREE.Vector3());
+  const r = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...rotate.map(THREE.MathUtils.degToRad), "XYZ"));
+  const to = center ? new THREE.Vector3(...center) : c;
+  transform(positions, new THREE.Matrix4().makeTranslation(to.x, to.y, to.z).multiply(r).multiply(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z)));
 }
 
 function simplify(part, ratio) {
@@ -171,14 +208,38 @@ function simplify(part, ratio) {
 }
 
 async function convert(entry) {
-  const { parts, thumb } = load3mf(entry.source.replace(/^~(?=[/\\])/, os.homedir()));
+  const { items, geometry, plates, thumb } = load3mf(entry.source.replace(/^~(?=[/\\])/, os.homedir()));
+  const assembled = entry.assembly === "bambu";
+  const omit = new Set(entry.omit || []);
+
+  const parts = [];
+  for (const item of items) {
+    if (omit.has(item.name)) continue;
+    const override = entry.place?.[item.name];
+    let g;
+    if (!assembled || override) {
+      g = geometry(item.id, item.printMatrix, (_k, own) => own);
+      if (override) place(g.positions, override);
+    } else if (item.assembly) {
+      g = geometry(item.id, item.assembly.instance, (k, own) => item.assembly.vols.get(k) ?? own);
+    } else {
+      console.warn(`  ${entry.slug}: "${item.name}" has no assembly position; add it to "place" or "omit". Skipped.`);
+      continue;
+    }
+    if (!g.indices.length) continue;
+    parts.push({ name: item.name, plate: item.plate, color: entry.colors?.[item.name] ?? item.color ?? FALLBACK_COLOR, ...g });
+  }
+  if (!assembled) layoutPlates(parts);
+
+  if (DEBUG) {
+    for (const p of parts) {
+      const b = bounds(p.positions);
+      const f = (v) => [v.x, v.y, v.z].map((n) => n.toFixed(1)).join(", ");
+      console.log(`  ${p.name.padEnd(28)} ${p.color}  min(${f(b.min)})  max(${f(b.max)})`);
+    }
+  }
+
   const sourceTriangles = parts.reduce((n, p) => n + p.indices.length / 3, 0);
-  const plates = layoutPlates(parts);
-
-  // Main part = largest bounding-box volume; report its size in mm (X × Y × Z, Z up).
-  const sizeOf = (p) => bounds(p.positions).getSize(new THREE.Vector3());
-  const main = parts.map((p) => ({ p, s: sizeOf(p) })).sort((a, b) => b.s.x * b.s.y * b.s.z - a.s.x * a.s.y * a.s.z)[0];
-
   // Trim very dense parts down to the shared triangle budget.
   if (sourceTriangles > TRIANGLE_BUDGET) {
     const heavy = parts.filter((p) => p.indices.length / 3 > 20_000);
@@ -194,6 +255,7 @@ async function convert(entry) {
   const doc = new Document();
   const buffer = doc.createBuffer();
   const scene = doc.createScene(entry.slug);
+  const materials = new Map();
   let displayTriangles = 0;
   for (const p of parts) {
     const src = p.positions;
@@ -209,8 +271,14 @@ async function convert(entry) {
     geom = mergeVertices(toCreasedNormals(geom, CREASE_ANGLE), 1e-4);
     displayTriangles += geom.index.count / 3;
 
+    // glTF colours are linear; THREE.Color converts from the sRGB hex.
+    if (!materials.has(p.color)) {
+      const c = new THREE.Color(p.color);
+      materials.set(p.color, doc.createMaterial(p.color).setBaseColorFactor([c.r, c.g, c.b, 1]).setRoughnessFactor(0.6).setMetallicFactor(0));
+    }
     const prim = doc
       .createPrimitive()
+      .setMaterial(materials.get(p.color))
       .setAttribute("POSITION", doc.createAccessor().setType("VEC3").setArray(geom.attributes.position.array).setBuffer(buffer))
       .setAttribute("NORMAL", doc.createAccessor().setType("VEC3").setArray(geom.attributes.normal.array).setBuffer(buffer))
       .setIndices(doc.createAccessor().setType("SCALAR").setArray(new Uint32Array(geom.index.array)).setBuffer(buffer));
@@ -237,22 +305,24 @@ async function convert(entry) {
     title: entry.title,
     glb: `/models/${entry.slug}.glb`,
     thumb: thumb ? `/models/${entry.slug}.webp` : null,
+    assembled,
     parts: parts.length,
     plates,
     sourceTriangles,
     displayTriangles,
-    mainPart: { name: main.p.name, size: [round(main.s.x), round(main.s.y), round(main.s.z)] },
-    layoutSize: [round(size.x), round(size.y), round(size.z)],
+    // Z-up millimetres: width × depth × height of what the viewer shows.
+    size: [round(size.x), round(size.y), round(size.z)],
     bytes: glb.byteLength,
   };
 }
 
 const stats = [];
 for (const entry of config) {
+  if (DEBUG) console.log(`${entry.slug}:`);
   const s = await convert(entry);
   stats.push(s);
   console.log(
-    `${s.slug}: ${s.parts} parts on ${s.plates} plate(s), ${s.sourceTriangles} -> ${s.displayTriangles} tris, main ${s.mainPart.size.join(" x ")} mm, ${(s.bytes / 1024).toFixed(0)} KB`,
+    `${s.slug}: ${s.assembled ? "assembled" : "print plates"}, ${s.parts} parts, ${s.sourceTriangles} -> ${s.displayTriangles} tris, ${s.size.join(" x ")} mm, ${(s.bytes / 1024).toFixed(0)} KB`,
   );
 }
 fs.writeFileSync(STATS_FILE, JSON.stringify(stats, null, 2) + "\n");

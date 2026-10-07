@@ -4,95 +4,67 @@
     "title": "Medicine box",
     "glb": "/models/medbox.glb",
     "thumb": "/models/medbox.webp",
-    "parts": 10,
+    "assembled": true,
+    "parts": 7,
     "plates": 5,
-    "sourceTriangles": 22256,
-    "displayTriangles": 22256,
-    "mainPart": {
-      "name": "geometry_0",
-      "size": [
-        162.4,
-        164,
-        85
-      ]
-    },
-    "layoutSize": [
-      489.9,
-      353.5,
+    "sourceTriangles": 20408,
+    "displayTriangles": 20408,
+    "size": [
+      162.4,
+      169,
       85
     ],
-    "bytes": 152996
+    "bytes": 137168
   },
   {
     "slug": "z-ring",
     "title": "Z-ring",
     "glb": "/models/z-ring.glb",
     "thumb": "/models/z-ring.webp",
+    "assembled": false,
     "parts": 2,
     "plates": 2,
     "sourceTriangles": 111646,
     "displayTriangles": 111646,
-    "mainPart": {
-      "name": "ring_body_v2.stl",
-      "size": [
-        65,
-        74.4,
-        6.9
-      ]
-    },
-    "layoutSize": [
+    "size": [
       125.5,
       74.4,
       6.9
     ],
-    "bytes": 572764
+    "bytes": 573032
   },
   {
     "slug": "tissue-box",
     "title": "Ribbed tissue box",
     "glb": "/models/tissue-box.glb",
     "thumb": "/models/tissue-box.webp",
+    "assembled": true,
     "parts": 2,
     "plates": 2,
     "sourceTriangles": 37132,
     "displayTriangles": 37132,
-    "mainPart": {
-      "name": "tissue_box_BOTTOM_v2_3.stl",
-      "size": [
-        161.1,
-        161.1,
-        76
-      ]
-    },
-    "layoutSize": [
-      336,
+    "size": [
+      161.1,
       161.1,
       76
     ],
-    "bytes": 235224
+    "bytes": 235136
   },
   {
     "slug": "cat-clicker",
     "title": "Cat clicker",
     "glb": "/models/cat-clicker.glb",
     "thumb": "/models/cat-clicker.webp",
+    "assembled": false,
     "parts": 6,
     "plates": 1,
     "sourceTriangles": 592946,
     "displayTriangles": 160000,
-    "mainPart": {
-      "name": "box",
-      "size": [
-        45,
-        45,
-        23.3
-      ]
-    },
-    "layoutSize": [
+    "size": [
       99.8,
       61.8,
       28.6
     ],
-    "bytes": 966796
+    "bytes": 967540
   }
 ]
