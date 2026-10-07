@@ -11,7 +11,7 @@ export const site = {
   // Set to "/resume.pdf" once a copy without the phone number is in /public.
   resumeUrl: null as string | null,
   // Cut out by scripts/prepare-hero.mjs.
-  heroImage: { src: "/me.webp", width: 1400, height: 1234 },
+  heroImage: { src: "/me.webp", width: 2000, height: 1763 },
   roles: [
     { article: "An", word: "Engineer" },
     { article: "A", word: "Full-stack dev" },

@@ -117,7 +117,9 @@ export function Hero() {
               height={site.heroImage.height}
               alt={`Portrait of ${site.name}`}
               priority
-              sizes="(max-width: 768px) 80vw, 40vw"
+              // Width tracks the hero height (62% / 78% / 88% of it) times the photo's aspect ratio.
+              sizes="(min-width: 768px) 105vh, (min-width: 640px) 92vh, 75vh"
+              quality={90}
               className="h-full w-full object-contain object-bottom"
             />
           </div>
