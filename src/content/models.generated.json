@@ -21,17 +21,17 @@
     "title": "Z-ring",
     "glb": "/models/z-ring.glb",
     "thumb": "/models/z-ring.webp",
-    "assembled": false,
+    "assembled": true,
     "parts": 2,
     "plates": 2,
     "sourceTriangles": 111646,
     "displayTriangles": 111646,
     "size": [
-      125.5,
+      65,
       74.4,
-      6.9
+      9.2
     ],
-    "bytes": 573032
+    "bytes": 572956
   },
   {
     "slug": "tissue-box",
