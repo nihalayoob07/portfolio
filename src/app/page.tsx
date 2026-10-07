@@ -1,3 +1,4 @@
+import { preload } from "react-dom";
 import { About } from "@/components/About";
 import { Chrome } from "@/components/Chrome";
 import { Contact } from "@/components/Contact";
@@ -8,8 +9,11 @@ import { SmoothScroll } from "@/components/SmoothScroll";
 import { TechStack } from "@/components/TechStack";
 import { WhatIDo } from "@/components/WhatIDo";
 import { Work } from "@/components/Work";
+import { site } from "@/content/site";
 
 export default function Home() {
+  preload(site.heroImage.src, { as: "image", imageSrcSet: site.heroImage.srcSet, imageSizes: site.heroSizes, fetchPriority: "high" });
+
   return (
     <>
       <SmoothScroll />

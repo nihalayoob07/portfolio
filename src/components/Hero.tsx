@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { site } from "@/content/site";
 import { gsap, useGSAP, MOTION } from "@/lib/gsap";
 
@@ -111,15 +110,16 @@ export function Hero() {
             className="relative h-full w-auto [mask-image:linear-gradient(to_bottom,black_72%,transparent)]"
             style={{ aspectRatio: `${site.heroImage.width} / ${site.heroImage.height}` }}
           >
-            <Image
+            {/* Pre-sized files from the CDN (scripts/prepare-hero.mjs); page.tsx preloads them. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={site.heroImage.src}
+              srcSet={site.heroImage.srcSet}
+              sizes={site.heroSizes}
               width={site.heroImage.width}
               height={site.heroImage.height}
               alt={`Portrait of ${site.name}`}
-              priority
-              // Width tracks the hero height (62% / 78% / 88% of it) times the photo's aspect ratio.
-              sizes="(min-width: 768px) 105vh, (min-width: 640px) 92vh, 75vh"
-              quality={90}
+              fetchPriority="high"
               className="h-full w-full object-contain object-bottom"
             />
           </div>

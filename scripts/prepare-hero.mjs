@@ -170,11 +170,17 @@ for (let i = 0; i < N; i++) {
   rgba[i * 4 + 3] = softAlpha[i];
 }
 
+// Two sizes served straight from the CDN (see site.heroImage), so the hero never waits on image optimisation.
 const out = path.join(ROOT, "public", "me.webp");
-const meta = await sharp(rgba, { raw: { width: W, height: H, channels: 4 } })
-  .webp({ quality: 90, alphaQuality: 100, smartSubsample: true })
-  .toFile(out);
-console.log(`me.webp ${W}x${H}, ${Math.round(meta.size / 1024)} KB`);
+const cutout = sharp(rgba, { raw: { width: W, height: H, channels: 4 } });
+const webp = { quality: 90, alphaQuality: 100, smartSubsample: true };
+const meta = await cutout.clone().webp(webp).toFile(out);
+const small = await cutout
+  .clone()
+  .resize({ width: 1000 })
+  .webp(webp)
+  .toFile(path.join(ROOT, "public", "me-1000.webp"));
+console.log(`me.webp ${W}x${H}, ${Math.round(meta.size / 1024)} KB; me-1000.webp ${Math.round(small.size / 1024)} KB`);
 
 if (flag === "--preview" && previewPath) {
   // The cut-out over the site's background and glow, for a quick visual check.
