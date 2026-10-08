@@ -103,7 +103,7 @@ export function Hero() {
         />
       </div>
 
-      <div data-hero-photo className="absolute inset-x-0 bottom-0 flex h-[62%] justify-center [perspective:1200px] sm:h-[78%] md:h-[88%]">
+      <div data-hero-photo className="absolute inset-x-0 bottom-0 flex h-[70%] justify-center [perspective:1200px] sm:h-[78%] md:h-[88%]">
         <div className="intro-fade h-full" style={{ animationDelay: "0.35s" }}>
           <div
             ref={photo}

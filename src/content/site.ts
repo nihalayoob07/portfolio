@@ -11,9 +11,9 @@ export const site = {
   // Set to "/resume.pdf" once a copy without the phone number is in /public.
   resumeUrl: null as string | null,
   // Cut out by scripts/prepare-hero.mjs.
-  heroImage: { src: "/me.webp", srcSet: "/me-1000.webp 1000w, /me.webp 2000w", width: 2000, height: 1763 },
-  // Width tracks the hero height (62% / 78% / 88% of it) times the photo's aspect ratio.
-  heroSizes: "(min-width: 768px) 105vh, (min-width: 640px) 92vh, 75vh",
+  heroImage: { src: "/me.webp", srcSet: "/me-1000.webp 1000w, /me.webp 1439w", width: 1439, height: 1667 },
+  // Width tracks the hero height (70% / 78% / 88% of it) times the photo's aspect ratio.
+  heroSizes: "(min-width: 768px) 76vh, (min-width: 640px) 67vh, 60vh",
   roles: [
     { article: "An", word: "Engineer" },
     { article: "A", word: "Full-stack dev" },
