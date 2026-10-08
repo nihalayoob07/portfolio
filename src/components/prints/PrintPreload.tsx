@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { isLite } from "@/lib/device";
 import { warm } from "./warm";
 
 // Once the page is idle, load the 3D code (which in turn fetches and decodes every print), then
@@ -8,6 +9,20 @@ import { warm } from "./warm";
 // Safari has no requestIdleCallback.
 export function PrintPreload() {
   useEffect(() => {
+    // Phones don't warm anything up: the 3D code loads once the prints are a couple of screens
+    // away, and each print loads and mounts near its own panel (see PrintStage).
+    if (isLite()) {
+      const io = new IntersectionObserver(
+        ([e]) => {
+          if (!e.isIntersecting) return;
+          io.disconnect();
+          void import("./PrintCanvas");
+        },
+        { rootMargin: "200% 0px" },
+      );
+      io.observe(document.getElementById("models")!);
+      return () => io.disconnect();
+    }
     const load = () => void import("./PrintCanvas").then(() => warm.start());
     const idle = window.requestIdleCallback as typeof window.requestIdleCallback | undefined;
     if (idle) {

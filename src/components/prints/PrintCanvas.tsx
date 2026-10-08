@@ -7,10 +7,11 @@ import { Environment, Lightformer, useGLTF } from "@react-three/drei";
 import { EffectComposer, N8AO, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import { models, type ModelEntry } from "@/content/models";
+import { isLite } from "@/lib/device";
 
 // As soon as this chunk loads (at idle, see PrintPreload), fetch and decode every print, so a
-// panel's model is already in memory when its canvas mounts.
-for (const m of models) useGLTF.preload(m.glb, false, true);
+// panel's model is already in memory when its canvas mounts. Phones load each one with its panel.
+if (!isLite()) for (const m of models) useGLTF.preload(m.glb, false, true);
 
 const BG = "#090c0b";
 const { degToRad: rad, smoothstep } = THREE.MathUtils;
@@ -25,6 +26,8 @@ export type PrintCanvasProps = {
   running: boolean;
   // Frame the print left of centre, leaving the right of the screen to captions (desktop only).
   aside: boolean;
+  // Phones: lower resolution, no ambient-occlusion pass, smaller shadow and lighting maps.
+  lite: boolean;
   // Called once the print's first frame has been drawn (shaders compiled, lighting baked).
   onReady: () => void;
 };
@@ -141,7 +144,7 @@ function usePieces(url: string) {
   }, [scene]);
 }
 
-function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasProps, "running">) {
+function Print({ model, progress, clickedAt, aside, lite, onReady }: Omit<PrintCanvasProps, "running">) {
   const { pieces, box } = usePieces(model.glb);
   const lid = useRef<THREE.Group>(null);
   const pressed = useRef<THREE.Group>(null);
@@ -241,7 +244,7 @@ function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasP
       <group ref={pressed}>{pieces.filter(isPressed).map(mesh)}</group>
       <group ref={stem}>{pieces.filter(isStem).map(mesh)}</group>
       {model.slug === "cat-clicker" && <ClickBanner centre={centre} radius={radius} clickedAt={clickedAt} />}
-      <Studio radius={radius} centre={centre} orbit={model.slug === "z-ring"} />
+      <Studio radius={radius} centre={centre} orbit={model.slug === "z-ring"} lite={lite} />
     </group>
   );
 }
@@ -366,7 +369,7 @@ function cyclorama(width: number, front: number, back: number, r: number, height
 
 // Studio set: dark sweep that melts into the page, soft key from above-left, cool fill,
 // a cobalt rim from behind, and a pool of light on the backdrop.
-function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vector3; orbit: boolean }) {
+function Studio({ radius, centre, orbit, lite }: { radius: number; centre: THREE.Vector3; orbit: boolean; lite: boolean }) {
   const r = radius;
   const sweep = useMemo(() => cyclorama(r * 30, r * 14, r * 2.6, r * 2.2, r * 14), [r]);
   const key = useRef<THREE.DirectionalLight>(null);
@@ -396,7 +399,7 @@ function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vecto
         position={[centre.x - r * 2.2, centre.y + r * 4, centre.z + r * 2.4]}
         intensity={2.3}
         color="#fff6ea"
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={lite ? [1024, 1024] : [2048, 2048]}
         shadow-radius={6}
         shadow-blurSamples={16}
         shadow-bias={-0.0002}
@@ -412,7 +415,7 @@ function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vecto
       <directionalLight position={[r * 1.5, r * 2.5, -r * 4]} intensity={1} color="#2ee6a6" />
       {orbit && <directionalLight position={[0, r * 6, 0]} intensity={1.2} color="#ffffff" />}
       <spotLight ref={pool} position={[0, r * 5, r * 2]} angle={0.5} penumbra={1} decay={0} intensity={orbit ? 0 : 1.4} color="#e4e2f0" />
-      <Environment resolution={256} environmentIntensity={orbit ? 1.1 : 0.75}>
+      <Environment resolution={lite ? 128 : 256} environmentIntensity={orbit ? 1.1 : 0.75}>
         <Lightformer form="rect" intensity={3} position={[-2, 4, 3]} scale={[5, 3, 1]} target={[0, 0, 0]} />
         <Lightformer form="rect" intensity={1.2} position={[4, 1, 2]} scale={[2, 4, 1]} target={[0, 0, 0]} />
         <Lightformer form="rect" intensity={2} color="#2ee6a6" position={[2, 2, -4]} scale={[3, 2, 1]} target={[0, 0, 0]} />
@@ -422,24 +425,31 @@ function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vecto
   );
 }
 
-export default function PrintCanvas({ model, progress, clickedAt, running, aside, onReady }: PrintCanvasProps) {
+export default function PrintCanvas({ model, progress, clickedAt, running, aside, lite, onReady }: PrintCanvasProps) {
   return (
     <Canvas
       shadows="percentage"
-      dpr={[1, 1.75]}
+      dpr={lite ? [1, 1.5] : [1, 1.75]}
       frameloop={running ? "always" : "demand"}
       camera={{ fov: 30, position: [0, 100, 400] }}
-      gl={{ antialias: false, powerPreference: "high-performance" }}
+      // Phones render straight to the screen (with the renderer's own antialiasing and the same
+      // tone mapping) instead of through the post-processing passes.
+      gl={{ antialias: lite, powerPreference: "high-performance" }}
+      onCreated={({ gl }) => {
+        if (lite) gl.toneMapping = THREE.NeutralToneMapping;
+      }}
     >
       <color attach="background" args={[BG]} />
       <fog attach="fog" args={[BG, 1000, 4000]} />
       <Suspense fallback={null}>
-        <Print model={model} progress={progress} clickedAt={clickedAt} aside={aside} onReady={onReady} />
+        <Print model={model} progress={progress} clickedAt={clickedAt} aside={aside} lite={lite} onReady={onReady} />
       </Suspense>
-      <EffectComposer multisampling={4}>
-        <N8AO aoRadius={Math.max(...model.size) * 0.08} distanceFalloff={1} intensity={2.4} quality="medium" halfRes />
-        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-      </EffectComposer>
+      {!lite && (
+        <EffectComposer multisampling={4}>
+          <N8AO aoRadius={Math.max(...model.size) * 0.08} distanceFalloff={1} intensity={2.4} quality="medium" halfRes />
+          <ToneMapping mode={ToneMappingMode.NEUTRAL} />
+        </EffectComposer>
+      )}
     </Canvas>
   );
 }

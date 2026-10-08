@@ -98,7 +98,7 @@ export function Chrome() {
       </header>
 
       {open && (
-        <div id="mobile-menu" className="fixed inset-0 z-40 flex flex-col justify-center bg-bg/95 px-5 backdrop-blur-sm md:hidden">
+        <div id="mobile-menu" className="fixed inset-0 z-40 flex flex-col justify-center bg-bg/[0.97] px-5 md:hidden">
           <nav aria-label="Sections" className="flex flex-col gap-2">
             {site.nav.map((item) => (
               <a key={item.href} href={item.href} onClick={() => setOpen(false)} className="display text-5xl">

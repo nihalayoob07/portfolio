@@ -15,7 +15,7 @@ export function reelTimeline(root: HTMLElement) {
     scrollTrigger: { trigger: article, start: "top top", end: "bottom bottom", scrub: 0.6 },
   });
   tl.to(q("[data-intro]"), { autoAlpha: 0, y: -60, duration: INTRO * 0.7, ease: "power1.in" }, 0.1)
-    .to(q("[data-dim]"), { opacity: 0, duration: INTRO * 0.7 }, 0.1)
+    .to(q("[data-dim]"), { autoAlpha: 0, duration: INTRO * 0.7 }, 0.1)
     .fromTo(q("[data-label]"), { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.3 }, INTRO * 0.6);
   return tl;
 }

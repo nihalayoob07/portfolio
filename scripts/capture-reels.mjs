@@ -58,6 +58,8 @@ function recorder(page, reel) {
       const png = await page.screenshot({ type: "png", clip: { x: 0, y: 0, width: VIEW.width, height }, captureBeyondViewport: true });
       const file = `${id}.webp`;
       await sharp(png).webp({ quality: 80 }).toFile(path.join(dir, file));
+      // Phones get a copy at the recording's own width (Frame in Showcase.tsx).
+      await sharp(png).resize({ width: VIEW.width }).webp({ quality: 80 }).toFile(path.join(dir, `${id}-m.webp`));
       manifest.frames[id] = { src: `/work/reels/${reel}/${file}`, height };
     },
     // Page-space box of an element, for cursor moves and typing overlays.

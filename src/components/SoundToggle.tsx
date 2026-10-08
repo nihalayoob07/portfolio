@@ -29,7 +29,7 @@ export function SoundToggle({ variant = "pill", className = "" }: { variant?: "p
       type="button"
       onClick={sound.toggle}
       aria-pressed={state === "on"}
-      className={`flex items-center gap-2 rounded-full border border-line bg-bg/75 px-4 py-2.5 text-sm font-semibold backdrop-blur hover:border-accent ${
+      className={`flex items-center gap-2 rounded-full border border-line bg-bg/85 px-4 py-2.5 text-sm font-semibold pointer-fine:bg-bg/75 pointer-fine:backdrop-blur hover:border-accent ${
         state === "locked" ? "text-ink shadow-[0_0_24px_rgb(46_230_166/0.35)]" : "text-ink/75"
       } ${className}`}
     >

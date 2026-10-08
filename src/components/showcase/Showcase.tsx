@@ -1,13 +1,26 @@
 "use client";
 
-import { createContext, use, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref, type RefObject } from "react";
+import {
+  createContext,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+} from "react";
 import { ArrowUpRight } from "lucide-react";
 import { gsap } from "@/lib/gsap";
+import { LITE } from "@/lib/device";
 
 type Link = { label: string; href: string };
 
-const ShowcaseContext = createContext({ onScreen: false });
-// Whether this panel is in the viewport (so 3D scenes can stop rendering when it isn't).
+const ShowcaseContext = createContext({ onScreen: false, near: false });
+// Whether this panel is in the viewport (so 3D scenes can stop rendering when it isn't), and
+// whether it's within a screen of it (phones only keep a 3D scene mounted that close).
 export const useShowcase = () => use(ShowcaseContext);
 
 // A full-screen panel, as on preymaker.com: the stage is fixed and clipped to the panel, so the
@@ -69,11 +82,17 @@ export function Showcase({
       className="relative [clip-path:inset(0)]"
       style={{ height: `${screens * 100}vh` }}
     >
-      <div className="fixed inset-0 overflow-hidden bg-bg" inert={!onScreen}>
+      {/* Off screen the stage is hidden outright, so phones don't keep painting panels nobody can see. */}
+      <div className={`fixed inset-0 overflow-hidden bg-bg ${onScreen ? "" : "invisible"}`} inert={!onScreen}>
         {still}
-        <ShowcaseContext value={{ onScreen }}>{(eager || near) && children}</ShowcaseContext>
+        <ShowcaseContext value={{ onScreen, near }}>{(eager || near) && children}</ShowcaseContext>
 
-        <div data-dim className="pointer-events-none absolute inset-0 bg-bg/75 backdrop-blur-lg" aria-hidden="true" />
+        {/* Blurring a whole screen is too slow for phones; they get a deeper dim instead. */}
+        <div
+          data-dim
+          className="pointer-events-none absolute inset-0 bg-bg/85 pointer-fine:bg-bg/75 pointer-fine:backdrop-blur-lg"
+          aria-hidden="true"
+        />
 
         <div data-intro className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
           <p className="eyebrow">
@@ -91,7 +110,7 @@ export function Showcase({
                   href={l.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-bg/60 px-4 py-2 text-sm font-medium backdrop-blur hover:border-accent hover:text-accent-soft"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-bg/60 px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent-soft pointer-fine:backdrop-blur"
                 >
                   {l.label} <ArrowUpRight className="size-4" aria-hidden="true" />
                 </a>
@@ -104,7 +123,7 @@ export function Showcase({
           data-label
           className="invisible absolute bottom-5 left-5 flex flex-wrap items-center gap-x-4 gap-y-2 md:bottom-8 md:left-8 lg:left-24"
         >
-          <span className="rounded-full border border-line bg-bg/75 px-4 py-2 text-sm backdrop-blur">
+          <span className="rounded-full border border-line bg-bg/85 px-4 py-2 text-sm pointer-fine:bg-bg/75 pointer-fine:backdrop-blur">
             <span className="font-mono text-xs text-ink/55">{String(index + 1).padStart(2, "0")}</span>
             <span className="ml-2.5 font-semibold">{title}</span>
             {status && <span className="ml-2.5 text-ink/55">{status}</span>}
@@ -115,7 +134,7 @@ export function Showcase({
               href={l.href}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 rounded-full border border-line bg-bg/75 px-3.5 py-2 text-sm font-medium text-accent-soft backdrop-blur hover:text-ink"
+              className="inline-flex items-center gap-1 rounded-full border border-line bg-bg/85 px-3.5 py-2 text-sm font-medium text-accent-soft hover:text-ink pointer-fine:bg-bg/75 pointer-fine:backdrop-blur"
             >
               {l.label} <ArrowUpRight className="size-3.5" aria-hidden="true" />
             </a>
@@ -227,7 +246,7 @@ export function Captions({ items, place = "side" }: { items: readonly Caption[];
         <div
           key={title}
           data-caption
-          className={`invisible col-start-1 row-start-1 ${place === "corner" ? "lg:rounded-2xl lg:border lg:border-line lg:bg-bg/70 lg:p-8 lg:backdrop-blur-md" : ""}`}
+          className={`invisible col-start-1 row-start-1 ${place === "corner" ? "lg:rounded-2xl lg:border lg:border-line lg:bg-bg/70 lg:p-8 lg:pointer-fine:backdrop-blur-md" : ""}`}
         >
           <span className="block h-1 w-12 rounded-full bg-accent shadow-[0_0_18px_rgb(46_230_166)]" aria-hidden="true" />
           <p className="display mt-5 bg-linear-to-br from-white from-40% to-accent-soft bg-clip-text pb-1 text-[clamp(2.1rem,3.7vw,4.2rem)] text-balance text-transparent">
@@ -240,12 +259,23 @@ export function Captions({ items, place = "side" }: { items: readonly Caption[];
   );
 }
 
+// A captured frame (`src` is the full-size .webp). Phones get the copy at the recording's own
+// width (`-m.webp`, see capture-reels): decoded, the full-size captures of two nearby reels are
+// more image memory than a phone browser will hold, and frames go blank.
+export function Frame({ src, alt = "", ...img }: ComponentProps<"img"> & { src: string }) {
+  return (
+    <picture className="contents">
+      <source media={LITE} srcSet={src.replace(/\.webp$/, "-m.webp")} />
+      <img src={src} alt={alt} draggable={false} {...img} />
+    </picture>
+  );
+}
+
 // Blurred, darkened copy of a frame behind a fitted screen, so the stage reads as full-bleed.
 export function Ambient({ src }: { src: string }) {
   return (
     <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      {/* eslint-disable-next-line @next/next/no-img-element -- decorative backdrop of an already-loaded frame */}
-      <img src={src} alt="" className="h-full w-full scale-125 object-cover opacity-35 blur-3xl" />
+      <Frame src={src} className="h-full w-full scale-125 object-cover opacity-35 blur-3xl" />
       <div className="absolute inset-0 bg-bg/40" />
     </div>
   );

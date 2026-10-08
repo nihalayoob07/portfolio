@@ -30,7 +30,7 @@ export function SoundPrompt() {
         e.preventDefault();
         answer(false);
       }}
-      className="m-auto w-[min(40rem,calc(100%-2.5rem))] overflow-visible bg-transparent text-ink backdrop:bg-bg/80 backdrop:backdrop-blur-xl open:animate-[sound-in_0.5s_cubic-bezier(0.2,1,0.3,1)]"
+      className="m-auto w-[min(40rem,calc(100%-2.5rem))] overflow-visible bg-transparent text-ink backdrop:bg-bg/90 pointer-fine:backdrop:bg-bg/80 pointer-fine:backdrop:backdrop-blur-xl open:animate-[sound-in_0.5s_cubic-bezier(0.2,1,0.3,1)]"
     >
       <div className="relative overflow-hidden rounded-3xl border border-line bg-surface/90 px-7 py-10 text-center shadow-[0_40px_160px_rgb(46_230_166/0.25)] md:px-14 md:py-14">
         <div

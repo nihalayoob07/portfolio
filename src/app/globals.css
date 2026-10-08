@@ -230,6 +230,12 @@ body {
   filter: blur(12px);
   transform: translateY(-35%);
 }
+/* Blurring display-size type is costly on phones; there the words just slide and fade. */
+@media (pointer: coarse) {
+  .roles > * {
+    filter: none !important;
+  }
+}
 
 html.lenis,
 html.lenis body {
