@@ -12,7 +12,7 @@ import { models, type ModelEntry } from "@/content/models";
 // panel's model is already in memory when its canvas mounts.
 for (const m of models) useGLTF.preload(m.glb, false, true);
 
-const BG = "#0a0a0c";
+const BG = "#090c0b";
 const { degToRad: rad, smoothstep } = THREE.MathUtils;
 const ease = (p: number, a: number, b: number) => smoothstep(p, a, b);
 
@@ -250,9 +250,9 @@ function Print({ model, progress, clickedAt, aside, onReady }: Omit<PrintCanvasP
 // camera. They're drawn after the backdrop and before the print, ignoring depth, so they sit on the
 // set but under the model. Each click flashes them and speeds them up for a moment.
 const BANNER_ROWS = [
-  { fill: false, color: "#3a4570", y: 1 },
-  { fill: true, color: "#4f7dff", y: 0 },
-  { fill: false, color: "#3a4570", y: -1 },
+  { fill: false, color: "#1f5c47", y: 1 },
+  { fill: true, color: "#2ee6a6", y: 0 },
+  { fill: false, color: "#1f5c47", y: -1 },
 ];
 function bannerTexture(fill: boolean) {
   const canvas = document.createElement("canvas");
@@ -409,13 +409,13 @@ function Studio({ radius, centre, orbit }: { radius: number; centre: THREE.Vecto
         shadow-camera-far={r * 12}
       />
       <directionalLight position={[r * 3, r * 1.5, r * 2]} intensity={0.5} color="#dfe6ff" />
-      <directionalLight position={[r * 1.5, r * 2.5, -r * 4]} intensity={1} color="#4f7dff" />
+      <directionalLight position={[r * 1.5, r * 2.5, -r * 4]} intensity={1} color="#2ee6a6" />
       {orbit && <directionalLight position={[0, r * 6, 0]} intensity={1.2} color="#ffffff" />}
       <spotLight ref={pool} position={[0, r * 5, r * 2]} angle={0.5} penumbra={1} decay={0} intensity={orbit ? 0 : 1.4} color="#e4e2f0" />
       <Environment resolution={256} environmentIntensity={orbit ? 1.1 : 0.75}>
         <Lightformer form="rect" intensity={3} position={[-2, 4, 3]} scale={[5, 3, 1]} target={[0, 0, 0]} />
         <Lightformer form="rect" intensity={1.2} position={[4, 1, 2]} scale={[2, 4, 1]} target={[0, 0, 0]} />
-        <Lightformer form="rect" intensity={2} color="#4f7dff" position={[2, 2, -4]} scale={[3, 2, 1]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={2} color="#2ee6a6" position={[2, 2, -4]} scale={[3, 2, 1]} target={[0, 0, 0]} />
         <Lightformer form="ring" intensity={0.6} position={[0, 6, 0]} scale={4} target={[0, 0, 0]} />
       </Environment>
     </>

@@ -80,7 +80,7 @@ export function DrillReel() {
   );
 
   return (
-    <div ref={root} className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_45%,#2a120a,#0a0a0c_70%)]">
+    <div ref={root} className="absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_45%,#2a120a,#090c0b_70%)]">
       <Screen width={W + 36} height={H + 36} fill={0.86}>
         <div data-phone className="drill-phone relative h-full w-full">
           {/* Sound rings while it rings. */}

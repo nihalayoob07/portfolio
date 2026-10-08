@@ -45,7 +45,7 @@ export function Journey() {
               className="relative grid gap-2 pb-16 pl-10 last:pb-0 md:grid-cols-2 md:gap-16 md:pl-0"
             >
               <span
-                className="absolute top-2 left-0 size-[15px] rounded-full border-2 border-bg bg-accent shadow-[0_0_18px_rgb(79_125_255/0.8)] md:left-1/2 md:-translate-x-1/2"
+                className="absolute top-2 left-0 size-[15px] rounded-full border-2 border-bg bg-accent shadow-[0_0_18px_rgb(46_230_166/0.8)] md:left-1/2 md:-translate-x-1/2"
                 aria-hidden="true"
               />
               <div className="md:flex md:items-start md:justify-between md:gap-6 md:pr-10">

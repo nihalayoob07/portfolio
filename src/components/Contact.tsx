@@ -7,7 +7,7 @@ export function Contact() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -bottom-1/2 left-1/2 h-[40rem] w-[60rem] -translate-x-1/2 rounded-full"
-        style={{ background: "radial-gradient(closest-side, rgb(79 125 255 / 0.22), transparent)" }}
+        style={{ background: "radial-gradient(closest-side, rgb(46 230 166 / 0.22), transparent)" }}
       />
       <div className="relative mx-auto max-w-7xl">
         <p className="eyebrow">Get in touch</p>
@@ -17,7 +17,7 @@ export function Contact() {
         <div className="mt-10 flex flex-wrap gap-3">
           <a
             href={`mailto:${site.email}`}
-            className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-white transition hover:bg-accent/85"
+            className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-bg transition hover:bg-accent/85"
           >
             <Mail className="size-4" aria-hidden="true" /> Email me
           </a>

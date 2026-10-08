@@ -126,7 +126,7 @@ export function DeckReel() {
           trip-photo.jpg
         </div>
         <div className="absolute inset-x-0 bottom-0 flex h-12 items-center justify-center gap-2 bg-[#14141c]/85 backdrop-blur">
-          {["#4f7dff", "#f3c969", "#e5564b", "#3fbf8a", "#a76cf0"].map((bg) => (
+          {["#2ee6a6", "#f3c969", "#e5564b", "#3fbf8a", "#a76cf0"].map((bg) => (
             <span key={bg} className="size-8 rounded-md opacity-90" style={{ background: bg }} />
           ))}
           <span className="absolute right-5 text-xs text-white/75">5:32 PM</span>

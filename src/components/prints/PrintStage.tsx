@@ -47,7 +47,7 @@ const STAGES: Record<string, { captions: Caption[]; place?: CaptionPlace; aside?
 };
 
 const WORDS = ["CLICK!", "CLACK!", "CLICK", "TAK!", "*click*", "CLIK!", "CLICK!!"];
-const COLORS = ["#ffffff", "#4f7dff", "#ff8fb1", "#ffd23f", "#93acff", "#7ef0c2"];
+const COLORS = ["#ffffff", "#2ee6a6", "#ff8fb1", "#ffd23f", "#8ff5d2", "#a78bfa"];
 const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
 
 // A comic-style "CLICK!" somewhere on the stage; spam enough and they fill it.
@@ -142,7 +142,7 @@ export function PrintStage({ model, order }: { model: ModelEntry; order: number 
             <button
               type="button"
               onClick={click}
-              className="relative flex items-center gap-2.5 rounded-full bg-accent px-6 py-3.5 text-sm font-bold tracking-[0.16em] text-white uppercase shadow-[0_0_0_6px_rgb(79_125_255/0.18),0_10px_40px_rgb(79_125_255/0.55)] transition hover:scale-105 active:scale-95 md:text-base"
+              className="relative flex items-center gap-2.5 rounded-full bg-accent px-6 py-3.5 text-sm font-bold tracking-[0.16em] text-bg uppercase shadow-[0_0_0_6px_rgb(46_230_166/0.18),0_10px_40px_rgb(46_230_166/0.55)] transition hover:scale-105 active:scale-95 md:text-base"
             >
               <span className="absolute inset-0 animate-ping rounded-full bg-accent/40 [animation-duration:1.8s]" aria-hidden="true" />
               <MousePointerClick className="relative size-5" aria-hidden="true" />

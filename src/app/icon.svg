@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#0a0a0c"/>
-  <circle cx="50" cy="52" r="26" fill="#4f7dff" opacity="0.35"/>
+  <rect width="64" height="64" rx="14" fill="#090c0b"/>
+  <circle cx="50" cy="52" r="26" fill="#2ee6a6" opacity="0.35"/>
   <text x="32" y="41" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="26" fill="#ecebf0" letter-spacing="-1">NA</text>
 </svg>

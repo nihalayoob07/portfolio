@@ -97,7 +97,7 @@ export function Hero() {
           ref={glow}
           className="h-full w-full rounded-full"
           style={{
-            background: "radial-gradient(circle, rgb(79 125 255 / 0.42), rgb(79 125 255 / 0.08) 45%, rgb(79 125 255 / 0) 70%)",
+            background: "radial-gradient(circle, rgb(46 230 166 / 0.42), rgb(46 230 166 / 0.08) 45%, rgb(46 230 166 / 0) 70%)",
             animation: "breathe 6s ease-in-out 1.6s infinite",
           }}
         />

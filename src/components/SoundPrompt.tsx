@@ -32,7 +32,7 @@ export function SoundPrompt() {
       }}
       className="m-auto w-[min(40rem,calc(100%-2.5rem))] overflow-visible bg-transparent text-ink backdrop:bg-bg/80 backdrop:backdrop-blur-xl open:animate-[sound-in_0.5s_cubic-bezier(0.2,1,0.3,1)]"
     >
-      <div className="relative overflow-hidden rounded-3xl border border-line bg-surface/90 px-7 py-10 text-center shadow-[0_40px_160px_rgb(79_125_255/0.25)] md:px-14 md:py-14">
+      <div className="relative overflow-hidden rounded-3xl border border-line bg-surface/90 px-7 py-10 text-center shadow-[0_40px_160px_rgb(46_230_166/0.25)] md:px-14 md:py-14">
         <div
           className="pointer-events-none absolute -top-24 left-1/2 size-72 -translate-x-1/2 rounded-full bg-accent/25 blur-3xl"
           aria-hidden="true"
@@ -57,7 +57,7 @@ export function SoundPrompt() {
             type="button"
             autoFocus
             onClick={() => answer(true)}
-            className="flex items-center justify-center gap-2.5 rounded-full bg-accent px-8 py-4 text-lg font-semibold text-white shadow-[0_10px_40px_rgb(79_125_255/0.5)] transition hover:scale-[1.03] active:scale-95"
+            className="flex items-center justify-center gap-2.5 rounded-full bg-accent px-8 py-4 text-lg font-semibold text-bg shadow-[0_10px_40px_rgb(46_230_166/0.5)] transition hover:scale-[1.03] active:scale-95"
           >
             <Volume2 className="size-5" aria-hidden="true" /> Turn sound on
           </button>

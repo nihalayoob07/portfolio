@@ -7,7 +7,7 @@ export default function NotFound() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute top-1/2 left-1/2 size-[44rem] -translate-1/2 rounded-full"
-        style={{ background: "radial-gradient(closest-side, rgb(79 125 255 / 0.22), transparent)" }}
+        style={{ background: "radial-gradient(closest-side, rgb(46 230 166 / 0.22), transparent)" }}
       />
       <div className="relative">
         <p className="eyebrow">Error 404</p>
@@ -19,7 +19,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="mt-10 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-white hover:bg-accent/85"
+          className="mt-10 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-bg hover:bg-accent/85"
         >
           <ArrowLeft className="size-4" aria-hidden="true" /> Back to the portfolio
         </Link>

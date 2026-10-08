@@ -229,7 +229,7 @@ export function Captions({ items, place = "side" }: { items: readonly Caption[];
           data-caption
           className={`invisible col-start-1 row-start-1 ${place === "corner" ? "lg:rounded-2xl lg:border lg:border-line lg:bg-bg/70 lg:p-8 lg:backdrop-blur-md" : ""}`}
         >
-          <span className="block h-1 w-12 rounded-full bg-accent shadow-[0_0_18px_rgb(79_125_255)]" aria-hidden="true" />
+          <span className="block h-1 w-12 rounded-full bg-accent shadow-[0_0_18px_rgb(46_230_166)]" aria-hidden="true" />
           <p className="display mt-5 bg-linear-to-br from-white from-40% to-accent-soft bg-clip-text pb-1 text-[clamp(2.1rem,3.7vw,4.2rem)] text-balance text-transparent">
             {title}
           </p>
